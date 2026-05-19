@@ -1,0 +1,69 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]: package_2
+      - generic [ref=e8]:
+        - heading "Kurifuri" [level=1] [ref=e9]
+        - paragraph [ref=e10]: Enterprise Logistics
+    - navigation [ref=e11]:
+      - button "dashboard Tổng quan" [active] [ref=e12]:
+        - generic [ref=e13]: dashboard
+        - text: Tổng quan
+      - button "videocam Phòng quay video" [disabled] [ref=e14]:
+        - generic [ref=e15]: videocam
+        - text: Phòng quay video
+      - button "receipt_long Đơn hàng" [disabled] [ref=e16]:
+        - generic [ref=e17]: receipt_long
+        - text: Đơn hàng
+      - button "groups Nhân viên" [disabled] [ref=e18]:
+        - generic [ref=e19]: groups
+        - text: Nhân viên
+      - button "inventory_2 Sản phẩm" [ref=e20]:
+        - generic [ref=e21]: inventory_2
+        - text: Sản phẩm
+    - button "settings Cài đặt" [ref=e23]:
+      - generic [ref=e24]: settings
+      - text: Cài đặt
+  - banner [ref=e25]:
+    - generic [ref=e26]:
+      - button "notifications" [ref=e27]:
+        - generic [ref=e28]: notifications
+      - button "help_outline" [ref=e30]:
+        - generic [ref=e31]: help_outline
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - paragraph [ref=e35]: Alex Rivera
+          - paragraph [ref=e36]: Ops Manager
+        - img "User profile" [ref=e37]
+  - main [ref=e38]:
+    - generic [ref=e130]:
+      - generic [ref=e131]:
+        - heading "Tổng quan" [level=1] [ref=e132]
+        - paragraph [ref=e133]: Theo dõi nhanh hoạt động đóng gói, video và hiệu suất vận hành.
+      - generic [ref=e134]:
+        - article [ref=e135]:
+          - paragraph [ref=e136]: Tổng đơn hàng
+          - paragraph [ref=e137]: 12,482
+          - paragraph [ref=e138]: 12.5% so với tháng trước
+        - article [ref=e139]:
+          - paragraph [ref=e140]: Video đã xử lý
+          - paragraph [ref=e141]: 8,914
+          - paragraph [ref=e142]: 3 luồng đang chạy
+        - article [ref=e143]:
+          - paragraph [ref=e144]: Dung lượng dùng
+          - paragraph [ref=e145]: 750 GB
+          - paragraph [ref=e146]: 75% cloud storage
+      - generic [ref=e147]:
+        - generic [ref=e148]:
+          - generic [ref=e149]:
+            - heading "Hiệu suất hàng tuần" [level=2] [ref=e150]
+            - paragraph [ref=e151]: Số lượng đơn hàng được quay theo ngày
+          - generic [ref=e152]: 7 ngày qua
+        - generic [ref=e153]:
+          - generic [ref=e155]: T2
+          - generic [ref=e157]: T3
+          - generic [ref=e159]: T4
+          - generic [ref=e161]: T5
+          - generic [ref=e163]: T6
+          - generic [ref=e165]: T7
+          - generic [ref=e167]: CN

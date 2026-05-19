@@ -1,0 +1,137 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]: package_2
+      - generic [ref=e8]:
+        - heading "Kurifuri" [level=1] [ref=e9]
+        - paragraph [ref=e10]: Enterprise Logistics
+    - navigation [ref=e11]:
+      - button "dashboard Tổng quan" [ref=e12]:
+        - generic [ref=e13]: dashboard
+        - text: Tổng quan
+      - button "videocam Phòng quay video" [disabled] [ref=e14]:
+        - generic [ref=e15]: videocam
+        - text: Phòng quay video
+      - button "receipt_long Đơn hàng" [disabled] [ref=e16]:
+        - generic [ref=e17]: receipt_long
+        - text: Đơn hàng
+      - button "groups Nhân viên" [disabled] [ref=e18]:
+        - generic [ref=e19]: groups
+        - text: Nhân viên
+      - button "inventory_2 Sản phẩm" [active] [ref=e20]:
+        - generic [ref=e21]: inventory_2
+        - text: Sản phẩm
+    - button "settings Cài đặt" [ref=e23]:
+      - generic [ref=e24]: settings
+      - text: Cài đặt
+  - banner [ref=e25]:
+    - generic [ref=e26]:
+      - button "notifications" [ref=e27]:
+        - generic [ref=e28]: notifications
+      - button "help_outline" [ref=e30]:
+        - generic [ref=e31]: help_outline
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - paragraph [ref=e35]: Alex Rivera
+          - paragraph [ref=e36]: Ops Manager
+        - img "User profile" [ref=e37]
+  - main [ref=e38]:
+    - generic [ref=e168]:
+      - generic [ref=e169]:
+        - generic [ref=e170]:
+          - heading "Danh mục sản phẩm" [level=1] [ref=e171]
+          - paragraph [ref=e172]: Quản lý và tra cứu thông tin sản phẩm để đóng gói chính xác.
+        - generic [ref=e173]:
+          - button "Danh mục expand_more" [ref=e174]:
+            - text: Danh mục
+            - generic [ref=e175]: expand_more
+          - button "add Thêm sản phẩm" [ref=e176]:
+            - generic [ref=e177]: add
+            - text: Thêm sản phẩm
+      - generic [ref=e178]:
+        - article [ref=e179]:
+          - generic [ref=e180]:
+            - img
+          - generic [ref=e181]:
+            - heading "Camera Optic Pro X1" [level=2] [ref=e182]
+            - paragraph [ref=e183]: "SKU: #OPX-772-B"
+            - generic [ref=e184]:
+              - generic [ref=e185]:
+                - paragraph [ref=e186]: Đã bán
+                - paragraph [ref=e187]: 1,240
+              - generic [ref=e188]:
+                - paragraph [ref=e189]: Trong kho
+                - paragraph [ref=e190]: "142"
+        - article [ref=e191]:
+          - generic [ref=e192]:
+            - img
+          - generic [ref=e193]:
+            - heading "Tai nghe Sonic Wireless" [level=2] [ref=e194]
+            - paragraph [ref=e195]: "SKU: #SNW-102-S"
+            - generic [ref=e196]:
+              - generic [ref=e197]:
+                - paragraph [ref=e198]: Đã bán
+                - paragraph [ref=e199]: "856"
+              - generic [ref=e200]:
+                - paragraph [ref=e201]: Trong kho
+                - paragraph [ref=e202]: "85"
+        - article [ref=e203]:
+          - generic [ref=e204]:
+            - img
+          - generic [ref=e205]:
+            - heading "Máy ảnh Retro Snap" [level=2] [ref=e206]
+            - paragraph [ref=e207]: "SKU: #RSI-990-Y"
+            - generic [ref=e208]:
+              - generic [ref=e209]:
+                - paragraph [ref=e210]: Đã bán
+                - paragraph [ref=e211]: "412"
+              - generic [ref=e212]:
+                - paragraph [ref=e213]: Trong kho
+                - paragraph [ref=e214]: "8"
+        - article [ref=e215]:
+          - generic [ref=e216]:
+            - img
+          - generic [ref=e217]:
+            - heading "Đồng hồ Timepiece M1" [level=2] [ref=e218]
+            - paragraph [ref=e219]: "SKU: #TMS-442-W"
+            - generic [ref=e220]:
+              - generic [ref=e221]:
+                - paragraph [ref=e222]: Đã bán
+                - paragraph [ref=e223]: "198"
+              - generic [ref=e224]:
+                - paragraph [ref=e225]: Trong kho
+                - paragraph [ref=e226]: "211"
+        - article [ref=e227]:
+          - generic [ref=e228]:
+            - img
+          - generic [ref=e229]:
+            - heading "Đèn bàn Lumina" [level=2] [ref=e230]
+            - paragraph [ref=e231]: "SKU: #LDL-552-M"
+            - generic [ref=e232]:
+              - generic [ref=e233]:
+                - paragraph [ref=e234]: Đã bán
+                - paragraph [ref=e235]: "56"
+              - generic [ref=e236]:
+                - paragraph [ref=e237]: Trong kho
+                - paragraph [ref=e238]: "0"
+        - article [ref=e239]:
+          - generic [ref=e240]:
+            - img
+          - generic [ref=e241]:
+            - heading "Loa Bluetooth Vibe" [level=2] [ref=e242]
+            - paragraph [ref=e243]: "SKU: #VB-201-K"
+            - generic [ref=e244]:
+              - generic [ref=e245]:
+                - paragraph [ref=e246]: Đã bán
+                - paragraph [ref=e247]: "329"
+              - generic [ref=e248]:
+                - paragraph [ref=e249]: Trong kho
+                - paragraph [ref=e250]: "54"
+      - generic [ref=e251]:
+        - paragraph [ref=e252]: Hiển thị 1-6 trong số 342 sản phẩm
+        - generic [ref=e253]:
+          - button "Trước" [ref=e254]
+          - button "1" [ref=e255]
+          - button "2" [ref=e256]
+          - button "3" [ref=e257]
+          - button "Sau" [ref=e258]
