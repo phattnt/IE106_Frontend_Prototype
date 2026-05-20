@@ -1,0 +1,910 @@
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { DropdownSelect } from '../components/DropdownSelect.jsx'
+import { Icon } from '../components/Icon.jsx'
+
+const planCatalog = {
+  free: {
+    name: 'Free',
+    price: '0đ',
+    suffix: '',
+    features: ['500 video', 'Lưu trữ 30 ngày'],
+  },
+  pro: {
+    name: 'Pro',
+    price: '500k',
+    suffix: '/tháng',
+    features: ['2000 video dung lượng cao', 'Lưu trữ dữ liệu trong 1 năm', 'AI hỗ trợ nhận diện nâng cao'],
+  },
+  master: {
+    name: 'Master',
+    price: '2000k',
+    suffix: '/tháng',
+    features: ['4000 video', 'Lưu trữ 3 năm', 'AI trợ giúp'],
+  },
+  business: {
+    name: 'Business',
+    price: 'Liên hệ',
+    suffix: '',
+    features: ['Không giới hạn', 'AI nhận diện nâng cao'],
+  },
+}
+
+const paymentMethods = [
+  { id: 'card', label: 'Thẻ tín dụng / Ghi nợ', icon: 'credit_card' },
+  { id: 'bank', label: 'Chuyển khoản ngân hàng', icon: 'account_balance' },
+  { id: 'wallet', label: 'Ví điện tử (Momo / ZaloPay)', icon: 'account_balance_wallet' },
+]
+
+const paymentHistory = [
+  { code: 'INV-0520-001', type: 'Gia hạn Pro', amount: '500k', status: 'Đã thanh toán', date: '20/05/2026 - 14:42' },
+  { code: 'INV-0420-014', type: 'Nâng cấp Free -> Pro', amount: '500k', status: 'Đã thanh toán', date: '20/04/2026 - 09:18' },
+  { code: 'INV-0320-009', type: 'Bổ sung lưu trữ', amount: '150k', status: 'Hoàn tất', date: '20/03/2026 - 16:05' },
+]
+
+const cameraSources = [
+  { id: 'logitech-brio-4k', name: 'Logitech Brio 4K', status: 'current' },
+  { id: 'usb-02', name: 'Camera USB 02', status: 'available' },
+  { id: 'packing-main', name: 'Camera đóng gói chính', status: 'available' },
+  { id: 'backup-camera', name: 'Camera dự phòng', status: 'available' },
+  { id: 'old-camera', name: 'Camera cũ', status: 'offline' },
+]
+
+const resolutionOptions = [
+  { id: '1080p', label: '1080p (FHD)' },
+  { id: '2k', label: '1440p (2K)' },
+  { id: '4k', label: '2160p (4K UHD)' },
+  { id: '720p', label: '720p (HD)' },
+]
+
+function formatDateFromNow(daysToAdd) {
+  const baseDate = new Date('2026-05-20T00:00:00')
+  baseDate.setDate(baseDate.getDate() + daysToAdd)
+
+  const day = `${baseDate.getDate()}`.padStart(2, '0')
+  const month = `${baseDate.getMonth() + 1}`.padStart(2, '0')
+  const year = baseDate.getFullYear()
+
+  return `${day}/${month}/${year}`
+}
+
+function getSourceBadge(status) {
+  if (status === 'current') {
+    return 'bg-blue-100 text-blue-700'
+  }
+  if (status === 'available') {
+    return 'bg-emerald-100 text-emerald-700'
+  }
+  return 'bg-rose-100 text-rose-500'
+}
+
+function getSourceStatusLabel(status) {
+  if (status === 'current') {
+    return 'Đang sử dụng'
+  }
+  if (status === 'available') {
+    return 'Khả dụng'
+  }
+  return 'Mất kết nối'
+}
+
+function useOutsideClose(ref, onClose) {
+  useEffect(() => {
+    function handleClick(event) {
+      if (ref.current && !ref.current.contains(event.target)) {
+        onClose()
+      }
+    }
+
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [onClose, ref])
+}
+
+function Toggle({ enabled, onChange }) {
+  return (
+    <button
+      aria-pressed={enabled}
+      className={`motion-button relative h-8 w-14 rounded-full ${
+        enabled
+          ? 'bg-blue-600 shadow-[0_8px_20px_rgba(37,99,235,0.28)]'
+          : 'border border-slate-300 bg-slate-200 shadow-[inset_0_1px_2px_rgba(148,163,184,0.28)]'
+      }`}
+      onClick={() => onChange(!enabled)}
+      type="button"
+    >
+      <span
+        className={`absolute top-1 h-6 w-6 rounded-full transition ${
+          enabled
+            ? 'left-7 bg-white shadow-sm'
+            : 'left-1 border border-slate-300 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.16)]'
+        }`}
+      />
+    </button>
+  )
+}
+
+function CameraSourceSelect({ currentSource, onSelect }) {
+  const [open, setOpen] = useState(false)
+  const selectRef = useRef(null)
+
+  useOutsideClose(selectRef, () => setOpen(false))
+
+  return (
+    <div className="relative" ref={selectRef}>
+      <span className="mb-3 block text-sm font-medium text-slate-600">Nguồn máy ảnh</span>
+      <button
+        className="glass-control flex h-11 w-full items-center justify-between rounded-2xl px-4 text-left text-base text-slate-800"
+        onClick={() => setOpen((value) => !value)}
+        type="button"
+      >
+        <span>{currentSource.name}</span>
+        <Icon className={`text-[20px] text-slate-500 transition ${open ? 'rotate-180' : ''}`} name="expand_more" />
+      </button>
+
+      {open ? (
+        <div className="motion-dropdown absolute left-0 top-[calc(100%+10px)] z-30 w-full min-w-[316px] overflow-hidden rounded-[20px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,248,255,0.96))] shadow-[0_22px_50px_rgba(15,23,42,0.16)] backdrop-blur-xl">
+          <div className="px-4 pt-4">
+            {cameraSources.map((source) => {
+              const isCurrent = currentSource.id === source.id
+              const isSelectable = source.status !== 'offline'
+
+              return (
+                <button
+                  className={`flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left transition ${
+                    isSelectable ? 'hover:bg-blue-50/70' : 'cursor-not-allowed opacity-65'
+                  }`}
+                  disabled={!isSelectable}
+                  key={source.id}
+                  onClick={() => {
+                    onSelect(source)
+                    setOpen(false)
+                  }}
+                  type="button"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className={`truncate text-[15px] ${isCurrent ? 'font-bold text-slate-950' : 'font-medium text-slate-700'}`}>
+                      {source.name}
+                    </p>
+                  </div>
+                  <span className={`rounded-xl px-3 py-1 text-xs font-semibold ${getSourceBadge(source.status)}`}>
+                    {getSourceStatusLabel(source.status)}
+                  </span>
+                  {isCurrent ? <Icon className="filled text-[20px] text-blue-700" name="check" /> : null}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="mt-2 flex items-center justify-between border-t border-slate-900/12 px-4 py-3">
+            <span className="text-sm text-slate-400">Không thấy thiết bị?</span>
+            <button className="text-sm font-semibold text-blue-700 transition hover:text-blue-800" type="button">
+              Quét lại
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function ResolutionSelect({ currentResolution, onSelect }) {
+  const [open, setOpen] = useState(false)
+  const selectRef = useRef(null)
+
+  useOutsideClose(selectRef, () => setOpen(false))
+
+  return (
+    <div className="relative" ref={selectRef}>
+      <span className="mb-3 block text-sm font-medium text-slate-600">Độ phân giải</span>
+      <button
+        className="glass-control flex h-11 w-full items-center justify-between rounded-2xl px-4 text-left text-base text-slate-800"
+        onClick={() => setOpen((value) => !value)}
+        type="button"
+      >
+        <span>{currentResolution.label}</span>
+        <Icon className={`text-[20px] text-slate-500 transition ${open ? 'rotate-180' : ''}`} name="expand_more" />
+      </button>
+
+      {open ? (
+        <div className="motion-dropdown absolute left-0 top-[calc(100%+10px)] z-20 w-full overflow-hidden rounded-[20px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,248,255,0.96))] shadow-[0_22px_50px_rgba(15,23,42,0.16)] backdrop-blur-xl">
+          <div className="p-3">
+            {resolutionOptions.map((option) => {
+              const active = option.id === currentResolution.id
+
+              return (
+                <button
+                  className={`flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left transition ${
+                    active ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-blue-50/70'
+                  }`}
+                  key={option.id}
+                  onClick={() => {
+                    onSelect(option)
+                    setOpen(false)
+                  }}
+                  type="button"
+                >
+                  <span className={`text-sm ${active ? 'font-semibold' : 'font-medium'}`}>{option.label}</span>
+                  {active ? <Icon className="filled text-[20px]" name="check" /> : null}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function SettingRow({ caption, description, enabled, onChange }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-t border-slate-900/12 pt-6 first:border-t-0 first:pt-0">
+      <div>
+        <p className="text-base font-medium text-slate-900">{caption}</p>
+        {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
+      </div>
+      <Toggle enabled={enabled} onChange={onChange} />
+    </div>
+  )
+}
+
+function PlanCard({ currentTier, planId, onSelect }) {
+  const plan = planCatalog[planId]
+  const isCurrent = currentTier === planId
+  const isUpgrade = currentTier === 'free' && (planId === 'pro' || planId === 'master')
+  const isHigherUpgrade = currentTier === 'pro' && planId === 'master'
+  const canAct = planId !== 'free' && planId !== 'business' && (isCurrent || isUpgrade || isHigherUpgrade)
+  const buttonLabel = isCurrent ? 'Gia hạn' : 'Nâng cấp'
+
+  return (
+    <article
+      className={`rounded-[22px] bg-[linear-gradient(180deg,rgba(196,216,247,0.9),rgba(207,223,248,0.76))] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] ${
+        isCurrent ? 'ring-2 ring-blue-600 shadow-[0_18px_40px_rgba(37,99,235,0.16)]' : ''
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-[20px] font-bold text-slate-900">{plan.name}</h3>
+        {isCurrent ? (
+          <span className="rounded-full bg-blue-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">
+            Đang dùng
+          </span>
+        ) : null}
+      </div>
+
+      <div className="mt-5 flex items-end gap-1">
+        <span className="text-[32px] font-extrabold leading-none text-blue-700">{plan.price}</span>
+        {plan.suffix ? <span className="pb-1 text-xl text-slate-600">{plan.suffix}</span> : null}
+      </div>
+
+      <div className="mt-8 space-y-4">
+        {plan.features.map((feature) => (
+          <div className="flex items-center gap-3 text-slate-700" key={feature}>
+            <Icon className="text-[18px] text-blue-700" name="check" />
+            <span className="text-[15px]">{feature}</span>
+          </div>
+        ))}
+      </div>
+
+      <button
+        className={`mt-10 h-11 w-full rounded-2xl text-base font-medium transition ${
+          canAct
+            ? 'bg-blue-700 text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800'
+            : 'bg-white/55 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
+        }`}
+        onClick={() => (canAct ? onSelect(planId, isCurrent ? 'renew' : 'upgrade') : null)}
+        type="button"
+      >
+        {planId === 'business' ? 'Liên hệ bán hàng' : canAct ? buttonLabel : 'Hiện tại'}
+      </button>
+    </article>
+  )
+}
+
+function CameraPreview({ autoFocus, stabilizer, currentSource, currentResolution }) {
+  return (
+    <div className="relative mt-8 overflow-hidden rounded-[20px] border border-white/40 bg-white/75 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">{currentSource.name}</span>
+        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600">{currentResolution.label}</span>
+        {autoFocus ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Auto focus</span> : null}
+        {stabilizer ? <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">Stabilizer</span> : null}
+      </div>
+
+      <div className="grid min-h-[316px] grid-cols-[120px_1fr] overflow-hidden rounded-[18px] bg-slate-50">
+        <aside className="border-r border-slate-900/12 bg-white p-3">
+          <div className="space-y-2">
+            {['Dashboard', 'Patients', 'Messages', 'Scheduling', 'Team', 'Medical Records', 'Reports'].map((item) => (
+              <div className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-slate-500" key={item}>
+                <span className="h-3 w-3 rounded-[4px] border border-slate-300" />
+                {item}
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <div className="relative bg-white">
+          <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+            <div className="flex gap-2">
+              {['All', 'Active (58)', 'Inactive (56)'].map((tab, index) => (
+                <span
+                  className={`rounded-md px-2.5 py-1 text-[10px] font-medium ${
+                    index === 0 ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}
+                  key={tab}
+                >
+                  {tab}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-24 rounded-md bg-slate-100" />
+              <div className="h-7 w-10 rounded-md bg-slate-100" />
+            </div>
+          </div>
+
+          <div className="space-y-3 p-4">
+            {[...Array(10)].map((_, index) => (
+              <div className="grid grid-cols-[1.4fr_1fr_0.9fr_1fr_0.4fr] items-center gap-3" key={index}>
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 rounded-full bg-slate-200" />
+                  <div className="space-y-1">
+                    <div className="h-2.5 w-24 rounded-full bg-slate-200" />
+                    <div className="h-2 w-18 rounded-full bg-slate-100" />
+                  </div>
+                </div>
+                <div className="h-2.5 w-20 rounded-full bg-slate-100" />
+                <div className={`h-5 w-18 rounded-full ${index % 3 === 1 ? 'bg-rose-100' : 'bg-emerald-100'}`} />
+                <div className="h-2.5 w-22 rounded-full bg-slate-100" />
+                <div className="ml-auto h-4 w-1 rounded-full bg-slate-300" />
+              </div>
+            ))}
+          </div>
+
+          <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-full bg-slate-700 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+            <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+            REC
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PaymentMethodRow({ checked, icon, label, onClick }) {
+  return (
+    <button
+      className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
+        checked ? 'border-blue-200 bg-blue-50/70 shadow-sm' : 'border-slate-200 bg-white/65 hover:bg-white/85'
+      }`}
+      onClick={onClick}
+      type="button"
+    >
+      <span
+        className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+          checked ? 'border-blue-700' : 'border-slate-400'
+        }`}
+      >
+        {checked ? <span className="h-2 w-2 rounded-full bg-blue-700" /> : null}
+      </span>
+      <Icon className="text-[18px] text-slate-600" name={icon} />
+      <span className="flex-1 text-sm text-slate-700">{label}</span>
+      {checked && icon === 'credit_card' ? (
+        <div className="flex gap-1">
+          <span className="h-4 w-4 rounded-sm bg-slate-400" />
+          <span className="h-4 w-4 rounded-sm bg-amber-300" />
+        </div>
+      ) : null}
+    </button>
+  )
+}
+
+function ModalShell({ children, onClose }) {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onClose])
+
+  return createPortal(
+    <div
+      className="motion-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/35 px-4 py-10 backdrop-blur-[2px]"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="motion-modal relative max-h-[90vh] w-full max-w-[660px] overflow-y-auto rounded-[28px] bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)] sm:p-8"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <button
+          className="motion-button absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/75 text-slate-500 hover:text-slate-800"
+          onClick={onClose}
+          type="button"
+        >
+          <Icon name="close" />
+        </button>
+        {children}
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+function ConfirmPlanModal({ action, method, onClose, onMethodChange, onNext, planId }) {
+  const plan = planCatalog[planId]
+  const title = action === 'renew' ? `Xác nhận gia hạn gói ${plan.name}` : `Xác nhận nâng cấp gói ${plan.name}`
+
+  return (
+    <ModalShell onClose={onClose}>
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[16px] bg-blue-600 text-white shadow-[0_16px_34px_rgba(37,99,235,0.25)]">
+        <Icon className="filled text-[28px]" name="verified_user" />
+      </div>
+
+      <div className="mt-5 text-center">
+        <h3 className="text-[22px] font-bold text-slate-950">{title}</h3>
+        <p className="mt-2 text-sm text-slate-500">Vui lòng kiểm tra lại thông tin đơn hàng trước khi thanh toán.</p>
+      </div>
+
+      <div className="mt-6 rounded-[22px] bg-[linear-gradient(135deg,#0f54c7,#1e66d0_45%,#2f75dc)] p-5 text-white shadow-[0_18px_38px_rgba(30,102,208,0.24)]">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-blue-100">Gói dịch vụ đã chọn</p>
+            <h4 className="mt-1 text-[28px] font-bold">{plan.name}</h4>
+          </div>
+          <div className="text-right">
+            <p className="text-[26px] font-extrabold">{plan.price}</p>
+            {plan.suffix ? <p className="text-sm text-blue-100">{plan.suffix}</p> : null}
+          </div>
+        </div>
+        <div className="mt-4 space-y-2">
+          {plan.features.map((feature) => (
+            <div className="flex items-center gap-2 text-sm text-blue-50" key={feature}>
+              <Icon className="text-[16px]" name="check_circle" />
+              {feature}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-500">Phương thức thanh toán</p>
+        <div className="space-y-2.5">
+          {paymentMethods.map((item) => (
+            <PaymentMethodRow
+              checked={method === item.id}
+              icon={item.icon}
+              key={item.id}
+              label={item.label}
+              onClick={() => onMethodChange(item.id)}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <button
+          className="h-11 flex-1 rounded-2xl bg-blue-100 text-sm font-semibold text-slate-700 transition hover:bg-blue-200/80"
+          onClick={onClose}
+          type="button"
+        >
+          Quay lại
+        </button>
+        <button
+          className="h-11 flex-[1.4] rounded-2xl bg-blue-700 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(37,99,235,0.22)] transition hover:bg-blue-800"
+          onClick={onNext}
+          type="button"
+        >
+          Thanh toán ngay
+        </button>
+      </div>
+    </ModalShell>
+  )
+}
+
+function PaymentDetailsModal({ method, onBack, onClose, onConfirm, planId }) {
+  const plan = planCatalog[planId]
+
+  return (
+    <ModalShell onClose={onClose}>
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+          <Icon className="text-[24px]" name="payments" />
+        </div>
+        <div>
+          <h3 className="text-[22px] font-bold text-slate-950">Thông tin thanh toán</h3>
+          <p className="mt-1 text-sm text-slate-500">Hoàn tất bước cuối để kích hoạt gói {plan.name}.</p>
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-[22px] bg-white/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-900/12 pb-4">
+          <div>
+            <p className="text-sm text-slate-500">Tổng thanh toán</p>
+            <p className="mt-1 text-[28px] font-extrabold text-blue-700">{plan.price}</p>
+          </div>
+          <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-blue-700">
+            {paymentMethods.find((item) => item.id === method)?.label}
+          </div>
+        </div>
+
+        {method === 'card' ? (
+          <div className="mt-5 space-y-4">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-600">Số thẻ</span>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">4242 4242 4242 4242</div>
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-600">Ngày hết hạn</span>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">08 / 28</div>
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-slate-600">CVV</span>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">•••</div>
+              </label>
+            </div>
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-600">Tên chủ thẻ</span>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">Alex Rivera</div>
+            </label>
+          </div>
+        ) : null}
+
+        {method === 'bank' ? (
+          <div className="mt-5 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Ngân hàng</p>
+                <p className="mt-2 text-sm font-semibold text-slate-800">ACB - Chi nhánh Quận 1</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Số tài khoản</p>
+                <p className="mt-2 text-sm font-semibold text-slate-800">0520 8888 9999</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-dashed border-blue-200 bg-blue-50/60 p-4 text-sm text-slate-700">
+              Nội dung chuyển khoản: <span className="font-bold text-blue-700">KURIFURI {plan.name.toUpperCase()} ALEX</span>
+            </div>
+          </div>
+        ) : null}
+
+        {method === 'wallet' ? (
+          <div className="mt-5 grid gap-4 sm:grid-cols-[160px_1fr]">
+            <div className="flex aspect-square items-center justify-center rounded-[20px] border border-slate-200 bg-white">
+              <div className="grid grid-cols-5 gap-1">
+                {[...Array(25)].map((_, index) => (
+                  <span className={`h-4 w-4 ${index % 2 === 0 ? 'bg-slate-900' : 'bg-white'}`} key={index} />
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col justify-center">
+              <p className="text-sm text-slate-600">Quét mã bằng Momo hoặc ZaloPay để tiếp tục.</p>
+              <div className="mt-4 flex gap-2">
+                <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-pink-600">Momo</span>
+                <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-600">ZaloPay</span>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <button
+          className="h-11 flex-1 rounded-2xl bg-blue-100 text-sm font-semibold text-slate-700 transition hover:bg-blue-200/80"
+          onClick={onBack}
+          type="button"
+        >
+          Chọn lại phương thức
+        </button>
+        <button
+          className="h-11 flex-[1.25] rounded-2xl bg-blue-700 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(37,99,235,0.22)] transition hover:bg-blue-800"
+          onClick={onConfirm}
+          type="button"
+        >
+          Xác nhận thanh toán
+        </button>
+      </div>
+    </ModalShell>
+  )
+}
+
+function PaymentSuccessModal({ onClose, planId }) {
+  const plan = planCatalog[planId]
+
+  return (
+    <ModalShell onClose={onClose}>
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+        <Icon className="filled text-[34px]" name="check_circle" />
+      </div>
+      <div className="mt-5 text-center">
+        <h3 className="text-[24px] font-bold text-slate-950">Thanh toán thành công</h3>
+        <p className="mt-2 text-sm text-slate-500">Gói {plan.name} đã được kích hoạt. Hệ thống đã gửi hóa đơn đến email của bạn.</p>
+      </div>
+
+      <div className="mt-6 rounded-[22px] bg-white/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Mã giao dịch</p>
+            <p className="mt-2 text-sm font-semibold text-slate-800">KRF-20260520-8842</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Thời gian</p>
+            <p className="mt-2 text-sm font-semibold text-slate-800">20/05/2026 - 14:42</p>
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Chu kỳ</p>
+            <p className="mt-2 text-sm font-semibold text-slate-800">Kích hoạt ngay</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <button
+          className="h-11 flex-1 rounded-2xl bg-blue-100 text-sm font-semibold text-slate-700 transition hover:bg-blue-200/80"
+          onClick={onClose}
+          type="button"
+        >
+          Đóng
+        </button>
+        <button
+          className="h-11 flex-[1.25] rounded-2xl bg-blue-700 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(37,99,235,0.22)] transition hover:bg-blue-800"
+          onClick={onClose}
+          type="button"
+        >
+          Xem lịch sử thanh toán
+        </button>
+      </div>
+    </ModalShell>
+  )
+}
+
+function SubscriptionStatusCard({ subscription }) {
+  const urgencyClass =
+    subscription.daysRemaining <= 7
+      ? 'bg-amber-50 text-amber-700'
+      : 'bg-emerald-50 text-emerald-700'
+
+  return (
+    <div className="mt-6 grid grid-cols-1 gap-4 rounded-[24px] bg-white/45 p-4 lg:grid-cols-[1.4fr_0.8fr_0.8fr]">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Subscription hiện tại</p>
+        <div className="mt-2 flex items-center gap-3">
+          <span className="text-[24px] font-bold text-slate-950">{planCatalog[subscription.tier].name}</span>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${urgencyClass}`}>
+            Còn {subscription.daysRemaining} ngày
+          </span>
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Ngày hết hạn</p>
+        <p className="mt-2 text-lg font-semibold text-slate-900">{subscription.renewalDate}</p>
+      </div>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Khuyến nghị</p>
+        <p className="mt-2 text-sm text-slate-600">
+          {subscription.daysRemaining <= 7 ? 'Nên gia hạn sớm để tránh gián đoạn lưu trữ.' : 'Gói của bạn đang hoạt động bình thường.'}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export function SettingsPage({
+  subscription = { tier: 'free', daysRemaining: 0, renewalDate: '--/--/----' },
+  onSubscriptionChange,
+}) {
+  const [selectedSource, setSelectedSource] = useState(cameraSources[0])
+  const [selectedResolution, setSelectedResolution] = useState(resolutionOptions[0])
+  const [autoFocus, setAutoFocus] = useState(true)
+  const [stabilizer, setStabilizer] = useState(true)
+  const [autoDelete, setAutoDelete] = useState(false)
+  const [checkoutState, setCheckoutState] = useState({
+    open: false,
+    step: 'confirm',
+    action: 'upgrade',
+    planId: 'pro',
+    method: 'card',
+  })
+
+  function openCheckout(planId, action) {
+    setCheckoutState({
+      open: true,
+      step: 'confirm',
+      action,
+      planId,
+      method: 'card',
+    })
+  }
+
+  function closeCheckout() {
+    setCheckoutState((current) => ({ ...current, open: false }))
+  }
+
+  function handlePaymentSuccess() {
+    const nextTier = checkoutState.planId === 'pro' || checkoutState.planId === 'master' ? checkoutState.planId : subscription.tier
+    const nextDays = checkoutState.action === 'renew' ? subscription.daysRemaining + 30 : 30
+
+    onSubscriptionChange?.({
+      tier: nextTier,
+      daysRemaining: nextDays,
+      renewalDate: formatDateFromNow(nextDays),
+    })
+
+    setCheckoutState((current) => ({ ...current, step: 'success' }))
+  }
+
+  return (
+    <>
+      <div className="dashboard-page page-scroll-pad-sm space-y-6">
+        <section className="glass-panel rounded-[30px] p-6 lg:p-7">
+          <h1 className="text-[32px] font-bold leading-tight text-slate-950">Cấu hình hệ thống</h1>
+          <p className="mt-2 text-base text-slate-600">Quản lý thiết bị và gói dịch vụ của bạn.</p>
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.9fr_0.95fr]">
+          <article className="glass-card rounded-[30px] p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex items-center gap-3">
+                <Icon className="text-[24px] text-slate-900" name="videocam" />
+                <h2 className="text-[18px] font-bold text-slate-950">Cài đặt Camera</h2>
+              </div>
+
+              <div className="flex w-fit items-center gap-3 rounded-full bg-white/75 px-4 py-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+                <span className="text-sm font-bold uppercase tracking-[0.08em] text-slate-700">Trạng thái: Hoạt động</span>
+              </div>
+            </div>
+
+            <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
+              <CameraSourceSelect currentSource={selectedSource} onSelect={setSelectedSource} />
+              <ResolutionSelect currentResolution={selectedResolution} onSelect={setSelectedResolution} />
+            </div>
+
+            <div className="mt-8 space-y-6">
+              <SettingRow caption="Tự động lấy nét" enabled={autoFocus} onChange={setAutoFocus} />
+              <SettingRow
+                caption="Ổn định khung hình"
+                description="Giảm rung cho camera khi đóng gói"
+                enabled={stabilizer}
+                onChange={setStabilizer}
+              />
+            </div>
+
+            <CameraPreview
+              autoFocus={autoFocus}
+              currentResolution={selectedResolution}
+              currentSource={selectedSource}
+              stabilizer={stabilizer}
+            />
+          </article>
+
+          <article className="glass-card flex min-h-full flex-col rounded-[30px] p-6">
+            <div className="flex items-center gap-3">
+              <Icon className="text-[23px] text-slate-900" name="storage" />
+              <h2 className="text-[18px] font-bold text-slate-950">Dữ liệu & Lưu trữ</h2>
+            </div>
+
+            <div className="mt-10">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="text-base text-slate-700">Giới hạn dung lượng</span>
+                <span className="text-xl font-bold text-blue-700">80%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-slate-200/80">
+                <div className="h-full w-4/5 rounded-full bg-blue-600" />
+              </div>
+            </div>
+
+            <div className="mt-6 pt-6">
+              <SettingRow
+                caption="Tự động xóa đơn hàng cũ"
+                description="xóa sau 30 ngày"
+                enabled={autoDelete}
+                onChange={setAutoDelete}
+              />
+            </div>
+
+            <div className="mt-6 flex-1 border-t border-slate-900/12" />
+
+            <button
+              className="mt-6 h-11 rounded-2xl bg-white/55 text-base font-medium text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-white/75"
+              type="button"
+            >
+              Xóa bộ nhớ đệm
+            </button>
+          </article>
+        </section>
+
+        <section className="glass-card rounded-[30px] p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <Icon className="text-[23px] text-slate-900" name="workspace_premium" />
+              <h2 className="text-[18px] font-bold text-slate-950">Gói dịch vụ</h2>
+            </div>
+            <div className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+              Gói hiện tại: {planCatalog[subscription.tier].name}
+            </div>
+          </div>
+
+          <SubscriptionStatusCard subscription={subscription} />
+
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {['pro', 'master', 'business'].map((planId) => (
+              <PlanCard currentTier={subscription.tier} key={planId} onSelect={openCheckout} planId={planId} />
+            ))}
+          </div>
+        </section>
+
+        <section className="glass-card rounded-[30px] p-6">
+          <div className="flex items-center gap-3">
+            <Icon className="text-[22px] text-slate-900" name="receipt_long" />
+            <h2 className="text-[18px] font-bold text-slate-950">Lịch sử thanh toán</h2>
+          </div>
+
+          <div className="mt-6 overflow-hidden rounded-[24px] bg-white/45">
+            <div className="hidden grid-cols-[1.2fr_1.5fr_0.8fr_0.9fr_1fr] gap-4 border-b border-slate-900/12 px-6 py-4 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-500 md:grid">
+              <span>Mã hóa đơn</span>
+              <span>Nội dung</span>
+              <span>Số tiền</span>
+              <span>Trạng thái</span>
+              <span>Thời gian</span>
+            </div>
+            {paymentHistory.map((item, index) => (
+              <div
+                className={`grid gap-2 px-5 py-4 md:grid-cols-[1.2fr_1.5fr_0.8fr_0.9fr_1fr] md:items-center md:gap-4 md:px-6 ${
+                  index < paymentHistory.length - 1 ? 'border-b border-slate-900/12' : ''
+                }`}
+                key={item.code}
+              >
+                <p className="text-sm font-semibold text-slate-900">{item.code}</p>
+                <p className="text-sm text-slate-700">{item.type}</p>
+                <p className="text-sm font-semibold text-blue-700">{item.amount}</p>
+                <span className="inline-flex w-fit rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  {item.status}
+                </span>
+                <p className="text-sm text-slate-500">{item.date}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+
+      {checkoutState.open && checkoutState.step === 'confirm' ? (
+        <ConfirmPlanModal
+          action={checkoutState.action}
+          method={checkoutState.method}
+          onClose={closeCheckout}
+          onMethodChange={(method) => setCheckoutState((current) => ({ ...current, method }))}
+          onNext={() => setCheckoutState((current) => ({ ...current, step: 'details' }))}
+          planId={checkoutState.planId}
+        />
+      ) : null}
+
+      {checkoutState.open && checkoutState.step === 'details' ? (
+        <PaymentDetailsModal
+          method={checkoutState.method}
+          onBack={() => setCheckoutState((current) => ({ ...current, step: 'confirm' }))}
+          onClose={closeCheckout}
+          onConfirm={handlePaymentSuccess}
+          planId={checkoutState.planId}
+        />
+      ) : null}
+
+      {checkoutState.open && checkoutState.step === 'success' ? (
+        <PaymentSuccessModal onClose={closeCheckout} planId={checkoutState.planId} />
+      ) : null}
+    </>
+  )
+}

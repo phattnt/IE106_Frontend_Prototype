@@ -1,275 +1,1400 @@
+﻿import { useEffect, useMemo, useState } from 'react'
+import {
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Tooltip,
+} from 'chart.js'
+import { createPortal } from 'react-dom'
+import { Line } from 'react-chartjs-2'
+import { DropdownSelect } from '../components/DropdownSelect.jsx'
 import { Icon } from '../components/Icon.jsx'
+import { Pagination } from '../components/Pagination.jsx'
 
-const staffRows = [
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
+
+const statusStyles = {
+  active: {
+    label: 'Đang làm việc',
+    className: 'bg-emerald-100 text-emerald-800',
+    dotClassName: 'bg-emerald-500',
+  },
+  leave: {
+    label: 'Nghỉ phép',
+    className: 'bg-rose-100 text-rose-700',
+    dotClassName: 'bg-amber-400',
+  },
+  pending: {
+    label: 'Chờ xếp ca',
+    className: 'bg-slate-200 text-slate-700',
+    dotClassName: 'bg-slate-400',
+  },
+}
+
+const roleOptions = ['Quản lý kho', 'Nhân viên kho', 'Giám sát kho']
+const shiftOptions = ['Ca sáng', 'Ca chiều', 'Cả ngày']
+const departmentOptions = ['Kho vận - HCM', 'Kho trung tâm - HN', 'Kho đóng gói - ĐN', 'Kho vận - Cần Thơ']
+function createSeededValue(seed) {
+  const next = Math.sin(seed * 12.9898) * 43758.5453
+  return next - Math.floor(next)
+}
+
+function randomInt(seed, min, max) {
+  return Math.round(min + createSeededValue(seed) * (max - min))
+}
+
+function buildWorkloadSeries(seed, length, min = 34, max = 82) {
+  return Array.from({ length }, (_, index) => randomInt(seed * 13 + index + 1, min, max))
+}
+
+function buildPerformanceProfile(seed) {
+  const workload = buildWorkloadSeries(seed, 14, 38, 84)
+  const previousWorkload = buildWorkloadSeries(seed + 40, 30, 32, 86)
+  const ordersPerHour = randomInt(seed * 7 + 2, 28, 48)
+  const accuracyValue = (97.2 + createSeededValue(seed * 11 + 3) * 2.6).toFixed(1)
+  const errorValue = (0.2 + createSeededValue(seed * 5 + 7) * 0.6).toFixed(1)
+  const focus = randomInt(seed * 17 + 4, 46, 62)
+  const support = randomInt(seed * 19 + 6, 18, 32)
+  const remain = Math.max(100 - focus - support, 12)
+  const correction = focus + support + remain - 100
+  const label = ['Ổn định', 'Đang tăng', 'Cần theo dõi', 'Hiệu suất tốt'][seed % 4]
+
+  return {
+    workload,
+    previousWorkload,
+    ordersPerHour,
+    ordersDelta: `+${randomInt(seed * 23 + 8, 1, 6)}`,
+    accuracy: `${accuracyValue}%`,
+    errorRate: `${errorValue}%`,
+    errorDelta: `${(0.1 + createSeededValue(seed * 29 + 9) * 0.3).toFixed(1)}%`,
+    performanceSplit: [focus, support, remain - correction],
+    performanceLabel: label,
+  }
+}
+
+const staffTemplates = [
   {
     name: 'Nguyễn Văn A',
-    contact: 'nguyenvana@example.com',
-    status: 'Đang làm việc',
-    statusClass: 'bg-emerald-100 text-emerald-800',
     role: 'Giám sát kho',
-    shift: '8:00 AM - 4:00 PM',
-    avatar:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
+    shift: 'Ca sáng',
+    status: 'active',
+    department: 'Kho vận - HCM',
+    joinedAt: '12/03/2022',
+    email: 'vana.nguyen@kurifuri.vn',
+    phone: '+84 901 234 567',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+    leaveRemaining: 12,
+    leaveUsed: 3,
+    leaveWithPermission: 5,
+    leaveWithoutPermission: 0,
+    accuracy: '99.8%',
+    ordersPerHour: 45,
+    ordersDelta: '+5',
+    errorRate: '0.2%',
+    errorDelta: '0.1%',
+    workload: [56, 62, 44, 78, 51, 66, 31, 69, 55, 59, 41, 74],
   },
   {
     name: 'Trần Thị B',
-    contact: '0987 654 321',
-    status: 'Nghỉ phép',
-    statusClass: 'bg-rose-100 text-rose-700',
-    role: 'Quản lí kho',
-    shift: '1:00 PM - 9:00 PM',
-    avatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
+    role: 'Quản lý kho',
+    shift: 'Cả ngày',
+    status: 'leave',
+    department: 'Kho trung tâm - HN',
+    joinedAt: '08/08/2021',
+    email: 'thib.tran@kurifuri.vn',
+    phone: '+84 936 772 118',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+    leaveRemaining: 8,
+    leaveUsed: 4,
+    leaveWithPermission: 4,
+    leaveWithoutPermission: 1,
+    accuracy: '98.9%',
+    ordersPerHour: 38,
+    ordersDelta: '+2',
+    errorRate: '0.4%',
+    errorDelta: '0.1%',
+    workload: [42, 48, 51, 63, 45, 57, 39, 60, 46, 52, 41, 58],
   },
   {
     name: 'Lê Văn C',
-    contact: 'levanc@example.com',
-    status: 'Chờ',
-    statusClass: 'bg-slate-200 text-slate-700',
     role: 'Nhân viên kho',
-    shift: 'Chưa xếp ca',
-    avatar:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=160&q=80',
+    shift: 'Ca chiều',
+    status: 'pending',
+    department: 'Kho đóng gói - ĐN',
+    joinedAt: '22/11/2023',
+    email: 'vanc.le@kurifuri.vn',
+    phone: '+84 903 556 201',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=200&q=80',
+    leaveRemaining: 10,
+    leaveUsed: 1,
+    leaveWithPermission: 2,
+    leaveWithoutPermission: 0,
+    accuracy: '97.8%',
+    ordersPerHour: 33,
+    ordersDelta: '+3',
+    errorRate: '0.6%',
+    errorDelta: '0.2%',
+    workload: [35, 41, 38, 47, 40, 49, 37, 53, 44, 46, 39, 50],
   },
   {
     name: 'Phạm Thị D',
-    contact: '0123 456 789',
-    status: 'Đang làm việc',
-    statusClass: 'bg-emerald-100 text-emerald-800',
     role: 'Nhân viên kho',
-    shift: '8:00 AM - 4:00 PM',
-    avatar:
-      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=160&q=80',
+    shift: 'Ca sáng',
+    status: 'active',
+    department: 'Kho vận - Cần Thơ',
+    joinedAt: '05/01/2023',
+    email: 'thid.pham@kurifuri.vn',
+    phone: '+84 978 220 419',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80',
+    leaveRemaining: 11,
+    leaveUsed: 2,
+    leaveWithPermission: 3,
+    leaveWithoutPermission: 1,
+    accuracy: '99.2%',
+    ordersPerHour: 41,
+    ordersDelta: '+4',
+    errorRate: '0.3%',
+    errorDelta: '0.1%',
+    workload: [48, 52, 47, 58, 49, 61, 45, 63, 51, 56, 43, 64],
   },
 ]
 
-const leaveRows = [
+const initialStaffRows = Array.from({ length: 20 }, (_, index) => {
+  const template = staffTemplates[index % staffTemplates.length]
+  const order = index + 1
+
+  return {
+    id: `staff-${order}`,
+    code: `NV-${String(480 + order).padStart(4, '0')}`,
+    ...template,
+    name: index < staffTemplates.length ? template.name : `${template.name} ${order}`,
+    email: index < staffTemplates.length ? template.email : `nhanvien${order}@kurifuri.vn`,
+    phone: `+84 9${String(10000000 + order).slice(0, 8)}`,
+    ...buildPerformanceProfile(order),
+  }
+})
+
+const leaveTemplates = [
   {
-    name: 'Nguyễn Văn A',
     type: 'Nghỉ bệnh',
     time: '2 ngày (15/10 - 16/10)',
     status: 'Chờ duyệt',
     statusClass: 'bg-amber-100 text-amber-700',
-    avatar:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
+    reason: 'Điều trị sốt xuất huyết tại bệnh viện theo chỉ định của bác sĩ. Cần nghỉ ngơi tĩnh dưỡng 2 ngày.',
+    attachment: 'giay_xac_nhan_y_te.pdf',
+    leaveBalance: { total: '12 ngày', used: '2 ngày', remain: '10 ngày' },
+    note: 'Cần bàn giao lại danh sách đơn tồn trước cuối ngày hôm nay.',
   },
   {
-    name: 'Trần Thị B',
     type: 'Việc riêng',
     time: '1 ngày (18/10)',
     status: 'Đã duyệt',
     statusClass: 'bg-emerald-100 text-emerald-800',
-    avatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&q=80',
+    reason: 'Xin nghỉ 1 ngày để giải quyết công việc gia đình đã lên lịch từ trước.',
+    attachment: 'don_xin_nghi_ca_nhan.pdf',
+    leaveBalance: { total: '12 ngày', used: '4 ngày', remain: '8 ngày' },
+    note: 'Đã được phê duyệt và sắp xếp nhân sự thay ca.',
+  },
+  {
+    type: 'Nghỉ phép năm',
+    time: '3 ngày (22/10 - 24/10)',
+    status: 'Đã xong',
+    statusClass: 'bg-slate-200 text-slate-700',
+    reason: 'Sử dụng phép năm để nghỉ cùng gia đình theo kế hoạch đã đăng ký đầu tháng.',
+    attachment: 'ke_hoach_nghi_phep.pdf',
+    leaveBalance: { total: '12 ngày', used: '6 ngày', remain: '6 ngày' },
+    note: 'Hoàn tất, đã quay lại làm việc đúng lịch.',
   },
 ]
 
-function PersonCell({ avatar, name }) {
-  return (
-    <div className="flex items-center gap-3">
-      <img alt={name} className="h-10 w-10 rounded-full object-cover shadow-sm" src={avatar} />
-      <span className="whitespace-nowrap text-sm font-bold text-slate-900">{name}</span>
-    </div>
+const initialLeaveRows = Array.from({ length: 32 }, (_, index) => {
+  const template = leaveTemplates[index % leaveTemplates.length]
+  const staff = initialStaffRows[index % 4]
+
+  return {
+    id: `leave-${index + 1}`,
+    code: `#LREQ-2024-${String(42 + index).padStart(4, '0')}`,
+    createdAt: `${String(10 + (index % 18)).padStart(2, '0')}/10/2024`,
+    role: `${staff.code} • ${staff.role}`,
+    name: staff.name,
+    avatar: staff.avatar,
+    staffId: staff.id,
+    ...template,
+  }
+})
+
+const emptyEmployeeForm = {
+  name: '',
+  email: '',
+  phone: '',
+  identityNumber: '',
+  gender: 'Nam',
+  role: 'Quản lý kho',
+  shift: '',
+}
+
+function ModalShell({ ariaLabel, children, maxWidth = 'max-w-[720px]', onClose }) {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onClose])
+
+  return createPortal(
+    <div
+      className="motion-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/28 px-4 py-8 backdrop-blur-md"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        aria-label={ariaLabel}
+        aria-modal="true"
+        className={`motion-modal relative max-h-[92vh] w-full overflow-y-auto rounded-[32px] bg-white shadow-[0_28px_80px_rgba(15,23,42,0.22)] ${maxWidth}`}
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+      >
+        {children}
+      </div>
+    </div>,
+    document.body
   )
 }
 
 function StatusPill({ children, className }) {
+  return <span className={`inline-flex rounded-xl px-3 py-1.5 text-sm font-semibold ${className}`}>{children}</span>
+}
+
+function ClickablePersonCell({ avatar, name, onClick }) {
   return (
-    <span className={`inline-flex rounded-lg px-3 py-1.5 text-sm font-semibold ${className}`}>{children}</span>
+    <button className="flex items-center gap-3 text-left" onClick={onClick} type="button">
+      <img alt={name} className="h-10 w-10 rounded-full object-cover shadow-sm" src={avatar} />
+      <span className="whitespace-nowrap text-sm font-bold text-slate-900 transition hover:text-blue-700">{name}</span>
+    </button>
   )
 }
 
-function DetailButton() {
+function DetailButton({ onClick }) {
   return (
     <button
-      className="ml-auto flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-blue-700 transition hover:text-blue-800"
+      className="motion-button ml-auto flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-blue-700 hover:text-blue-800"
+      onClick={onClick}
       type="button"
     >
-      <Icon name="visibility" className="text-[18px]" />
+      <Icon className="text-[18px]" name="visibility" />
       Chi tiết
     </button>
   )
 }
 
-export function StaffPage() {
+function DeleteEmployeeModal({ employee, onClose, onConfirm }) {
   return (
-    <div className="dashboard-page space-y-5">
-      <section className="glass-panel flex flex-col gap-4 rounded-[24px] p-6 lg:flex-row lg:items-center lg:justify-between">
+    <ModalShell ariaLabel={`Xác nhận xóa ${employee.name}`} maxWidth="max-w-[560px]" onClose={onClose}>
+      <div className="px-8 pb-8 pt-10 text-center">
+        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-rose-100">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+            <Icon className="text-[34px]" name="error" />
+          </div>
+        </div>
+
+        <h2 className="mt-8 text-[22px] font-bold text-slate-950">Xác nhận xóa nhân viên</h2>
+        <p className="mx-auto mt-4 max-w-[360px] text-[15px] leading-8 text-slate-600">
+          Bạn có chắc chắn muốn xóa nhân viên này khỏi hệ thống không? Hành động này không thể hoàn tác.
+        </p>
+
+        <div className="mx-auto mt-8 flex max-w-[370px] items-center gap-4 rounded-[24px] border border-slate-900/10 bg-white p-5 text-left">
+          <img alt={employee.name} className="h-16 w-16 rounded-full object-cover" src={employee.avatar} />
+          <div>
+            <p className="text-[24px] font-bold text-slate-950">{employee.name}</p>
+            <p className="mt-1 text-[15px] text-slate-500">Mã NV: {employee.code}</p>
+          </div>
+        </div>
+
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button className="motion-button h-12 rounded-2xl px-7 text-sm font-semibold text-slate-700" onClick={onClose} type="button">
+            Hủy
+          </button>
+          <button
+            className="motion-button flex h-12 items-center gap-2 rounded-2xl bg-red-600 px-7 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(220,38,38,0.24)] hover:bg-red-700"
+            onClick={() => onConfirm(employee.id)}
+            type="button"
+          >
+            <Icon className="text-[18px]" name="delete" />
+            Xóa nhân viên
+          </button>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-900/12 px-8 py-5 text-center text-[15px] text-slate-600">
+        Tài khoản này sẽ bị thu hồi quyền truy cập ngay lập tức.
+      </div>
+    </ModalShell>
+  )
+}
+
+function AddEmployeeModal({
+  form,
+  isRoleMenuOpen,
+  onClose,
+  onRoleSelect,
+  onSubmit,
+  onToggleRoleMenu,
+  onValueChange,
+}) {
+  const showShiftField = form.role !== 'Quản lý kho'
+
+  return (
+    <ModalShell ariaLabel="Thêm nhân viên mới" maxWidth="max-w-[640px]" onClose={onClose}>
+      <div className="flex items-start justify-between border-b border-slate-900/12 px-6 py-6 sm:px-7">
         <div>
-          <h1 className="text-[28px] font-bold leading-tight text-slate-950 sm:text-[32px]">Quản lý Nhân viên</h1>
-          <p className="mt-2 max-w-2xl text-sm font-normal text-slate-600 sm:text-base">
-            Xem và quản lý danh sách nhân viên đóng gói, trạng thái và hiệu suất.
-          </p>
+          <h2 className="text-[22px] font-bold text-slate-950">Thêm nhân viên mới</h2>
+          <p className="mt-2 text-[15px] text-slate-500">Cung cấp thông tin chi tiết để tạo tài khoản nhân sự.</p>
         </div>
-
-        <button
-          className="flex h-11 items-center justify-center gap-2 self-start rounded-2xl bg-blue-700 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] transition hover:bg-blue-800 lg:self-auto"
-          type="button"
-        >
-          <Icon name="add" className="text-base" />
-          Thêm nhân viên mới
+        <button className="motion-button text-slate-400 hover:text-slate-700" onClick={onClose} type="button">
+          <Icon className="text-[26px]" name="close" />
         </button>
-      </section>
+      </div>
 
-      <section className="glass-card rounded-[24px] p-4 sm:p-6">
-        <div className="space-y-3 md:hidden">
-          {staffRows.map((staff) => (
-            <article className="rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]" key={staff.name}>
-              <div className="flex items-start justify-between gap-3">
-                <PersonCell avatar={staff.avatar} name={staff.name} />
-                <StatusPill className={staff.statusClass}>{staff.status}</StatusPill>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Thông tin</p>
-                  <p className="mt-1 text-slate-600">{staff.contact}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Chức vụ</p>
-                  <p className="mt-1 font-semibold text-blue-700">{staff.role}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Ca làm</p>
-                  <p className="mt-1 text-slate-600">{staff.shift}</p>
-                </div>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <DetailButton />
-              </div>
-            </article>
-          ))}
-        </div>
+      <form onSubmit={onSubmit}>
+        <div className="space-y-6 px-6 py-7 sm:px-7">
+          <div className="text-center">
+            <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-full border-2 border-dashed border-blue-200 bg-slate-50 text-slate-400">
+              <Icon className="text-[34px]" name="person_add" />
+              <button
+                className="motion-button absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-white shadow-[0_10px_18px_rgba(37,99,235,0.26)]"
+                type="button"
+              >
+                <Icon className="text-[18px]" name="photo_camera" />
+              </button>
+            </div>
+            <p className="mt-4 text-[15px] font-medium text-slate-500">Tải lên ảnh đại diện</p>
+            <p className="mt-2 text-sm text-slate-400">Hỗ trợ JPG, PNG, WEBP (tối đa 5MB)</p>
+          </div>
 
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full min-w-[920px] border-collapse">
-            <thead>
-              <tr className="text-left text-[12px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                <th className="px-4 pb-5">Tên nhân viên</th>
-                <th className="px-4 pb-5">Thông tin</th>
-                <th className="px-4 pb-5">Trạng thái</th>
-                <th className="px-4 pb-5">Chức vụ</th>
-                <th className="px-4 pb-5">Ca làm</th>
-                <th className="px-4 pb-5 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {staffRows.map((staff, index) => (
-                <tr
-                  className={index < staffRows.length - 1 ? 'border-b border-white/35' : ''}
-                  key={staff.name}
-                >
-                  <td className="px-4 py-4">
-                    <PersonCell avatar={staff.avatar} name={staff.name} />
-                  </td>
-                  <td className="px-4 py-4 text-sm text-slate-600">{staff.contact}</td>
-                  <td className="px-4 py-4">
-                    <StatusPill className={staff.statusClass}>{staff.status}</StatusPill>
-                  </td>
-                  <td className="px-4 py-4 text-sm font-semibold text-blue-700">{staff.role}</td>
-                  <td className="px-4 py-4 text-sm text-slate-600">{staff.shift}</td>
-                  <td className="px-4 py-4">
-                    <DetailButton />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          <div>
+            <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-name">
+              Họ và tên
+            </label>
+            <input
+              className="h-12 w-full rounded-full border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+              id="staff-name"
+              onChange={(event) => onValueChange('name', event.target.value)}
+              placeholder="Nhập tên đầy đủ của nhân viên"
+              type="text"
+              value={form.name}
+            />
+          </div>
 
-        <div className="mt-5 flex flex-col gap-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-          <p>Hiển thị 1 đến 4 của 24 nhân viên</p>
-          <div className="flex items-center gap-2">
-            <button className="pagination-button opacity-50" type="button">
-              Trước
-            </button>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-email">
+                Email
+              </label>
+              <input
+                className="h-12 w-full rounded-full border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+                id="staff-email"
+                onChange={(event) => onValueChange('email', event.target.value)}
+                placeholder="example@vp.com"
+                type="email"
+                value={form.email}
+              />
+            </div>
+
+            <div>
+              <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-phone">
+                Số điện thoại
+              </label>
+              <input
+                className="h-12 w-full rounded-full border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+                id="staff-phone"
+                onChange={(event) => onValueChange('phone', event.target.value)}
+                placeholder="09xx xxx xxx"
+                type="text"
+                value={form.phone}
+              />
+            </div>
+
+            <div>
+              <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-id-card">
+                Số CMND/CCCD
+              </label>
+              <input
+                className="h-12 w-full rounded-full border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+                id="staff-id-card"
+                onChange={(event) => onValueChange('identityNumber', event.target.value)}
+                placeholder="Nhập số định danh"
+                type="text"
+                value={form.identityNumber}
+              />
+            </div>
+
+            <div>
+              <p className="mb-3 block text-[15px] font-medium text-slate-800">Giới tính</p>
+              <div className="flex h-12 flex-wrap items-center gap-6">
+                {['Nam', 'Nữ', 'Khác'].map((option) => (
+                  <label className="flex items-center gap-2 text-[15px] text-slate-700" key={option}>
+                    <span
+                      className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                        form.gender === option ? 'border-blue-700 text-blue-700' : 'border-slate-400 text-transparent'
+                      }`}
+                    >
+                      <span className="h-2.5 w-2.5 rounded-full bg-current" />
+                    </span>
+                    <input
+                      checked={form.gender === option}
+                      className="sr-only"
+                      name="gender"
+                      onChange={() => onValueChange('gender', option)}
+                      type="radio"
+                    />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="relative">
+            <label className="mb-3 block text-[15px] font-medium text-slate-800">Chức vụ</label>
             <button
-              className="pagination-button bg-blue-700 text-white shadow-[0_10px_20px_rgba(37,99,235,0.24)]"
+              className={`motion-button flex h-12 w-full items-center justify-between rounded-full border bg-white px-4 text-left text-[15px] ${
+                isRoleMenuOpen ? 'border-blue-700 shadow-[0_0_0_2px_rgba(37,99,235,0.12)]' : 'border-slate-300'
+              }`}
+              onClick={onToggleRoleMenu}
               type="button"
             >
-              1
+              <span className={form.role ? 'text-slate-800' : 'text-slate-400'}>{form.role || 'Chọn chức vụ'}</span>
+              <Icon className={`text-[20px] text-slate-500 transition ${isRoleMenuOpen ? 'rotate-180' : ''}`} name="expand_more" />
             </button>
-            <button className="pagination-button" type="button">
-              2
+
+            {isRoleMenuOpen ? (
+              <div className="motion-dropdown absolute left-0 right-0 top-[calc(100%+12px)] z-10 overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_24px_48px_rgba(15,23,42,0.14)]">
+                {roleOptions.map((option, index) => (
+                  <button
+                    className={`flex w-full items-center px-4 py-4 text-left text-[15px] text-slate-700 transition hover:bg-slate-50 ${
+                      form.role === option ? 'bg-blue-50 text-slate-900' : ''
+                    } ${index < roleOptions.length - 1 ? 'border-b border-slate-900/8' : ''}`}
+                    key={option}
+                    onClick={() => onRoleSelect(option)}
+                    type="button"
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {showShiftField ? (
+            <div>
+              <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-shift">
+                Ca làm
+              </label>              <DropdownSelect
+                onChange={(value) => onValueChange('shift', value)}
+                options={shiftOptions.map((option) => ({ label: option, value: option }))}
+                placeholder="Chọn ca làm"
+                value={form.shift}
+              />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex items-center justify-end gap-4 border-t border-slate-900/12 px-6 py-6 sm:px-7">
+          <button className="motion-button h-11 rounded-2xl border border-slate-300 px-7 text-sm font-semibold text-slate-700" onClick={onClose} type="button">
+            Hủy
+          </button>
+          <button
+            className="motion-button flex h-11 items-center gap-2 rounded-2xl bg-blue-600 px-7 text-sm font-semibold text-white shadow-[0_16px_30px_rgba(59,130,246,0.26)] hover:bg-blue-700"
+            type="submit"
+          >
+            <Icon className="text-[18px]" name="person_add" />
+            Thêm nhân viên
+          </button>
+        </div>
+      </form>
+    </ModalShell>
+  )
+}
+
+function LeaveRequestModal({ leave, onClose }) {
+  return (
+    <ModalShell ariaLabel={`Chi tiết đơn xin nghỉ ${leave.code}`} maxWidth="max-w-[680px]" onClose={onClose}>
+      <button
+        className="motion-button absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:text-slate-800"
+        onClick={onClose}
+        type="button"
+      >
+        <Icon name="close" />
+      </button>
+
+      <div className="border-b border-slate-900/12 px-8 py-6">
+        <h2 className="text-[24px] font-bold text-slate-950">Chi tiết đơn xin nghỉ</h2>
+        <p className="mt-2 text-[15px] text-slate-500">
+          Mã đơn: {leave.code} • Ngày tạo: {leave.createdAt}
+        </p>
+      </div>
+
+      <div className="space-y-6 px-8 py-6">
+        <section className="rounded-[24px] border border-slate-900/8 bg-white p-5">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="flex items-center gap-4">
+              <img alt={leave.name} className="h-14 w-14 rounded-full object-cover" src={leave.avatar} />
+              <div>
+                <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Nhân viên</p>
+                <p className="mt-1 text-[18px] font-bold text-slate-950">{leave.name}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Mã NV / Chức vụ</p>
+              <p className="mt-1 text-[18px] font-bold text-slate-950">{leave.role}</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Loại đơn</p>
+            <p className="mt-2 text-[18px] font-bold text-slate-950">{leave.type}</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Thời gian</p>
+            <p className="mt-2 text-[18px] font-bold text-slate-950">{leave.time}</p>
+          </div>
+        </section>
+
+        <section>
+          <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Lý do chi tiết</p>
+          <div className="mt-3 rounded-[20px] border border-slate-900/8 bg-white p-4 text-[15px] leading-7 text-slate-700">
+            {leave.reason}
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Tài liệu đính kèm</p>
+            <button className="mt-3 flex items-center gap-3 rounded-[18px] border border-slate-900/8 bg-white px-3 py-3 text-blue-700" type="button">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
+                <Icon className="text-[18px]" name="description" />
+              </span>
+              <span className="text-sm font-semibold">{leave.attachment}</span>
             </button>
-            <button className="pagination-button" type="button">
-              3
+          </div>
+
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Thông tin quỹ phép</p>
+            <div className="mt-3 space-y-2 text-[15px]">
+              <div className="flex items-center justify-between border-b border-slate-900/8 pb-2 text-slate-600">
+                <span>Tổng cộng:</span>
+                <span className="font-semibold text-slate-950">{leave.leaveBalance.total}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-slate-900/8 pb-2 text-slate-600">
+                <span>Đã sử dụng:</span>
+                <span className="font-semibold text-slate-950">{leave.leaveBalance.used}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-600">
+                <span>Còn lại:</span>
+                <span className="font-semibold text-emerald-600">{leave.leaveBalance.remain}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ghi chú của quản lý</p>
+          <div className="mt-3 min-h-24 rounded-[20px] border border-slate-900/8 bg-white p-4 text-[15px] text-slate-500">{leave.note}</div>
+        </section>
+      </div>
+
+      <div className="flex flex-col gap-4 border-t border-slate-900/12 px-8 py-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3 text-[15px] text-slate-600">
+          <span>Trạng thái:</span>
+          <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="motion-button h-11 rounded-2xl border border-slate-300 px-6 text-sm font-semibold text-slate-700" type="button">
+            Từ chối
+          </button>
+          <button className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800" type="button">
+            Phê duyệt
+          </button>
+        </div>
+      </div>
+    </ModalShell>
+  )
+}
+
+function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, staff }) {
+  const [draft, setDraft] = useState(staff)
+  const [saveLabel, setSaveLabel] = useState('Lưu thay đổi')
+  const [leaveHistoryPage, setLeaveHistoryPage] = useState(1)
+  const [chartMode, setChartMode] = useState('current')
+  const statusMeta = statusStyles[draft.status]
+  const staffLeaves = leaveRows.filter((leave) => leave.staffId === staff.id)
+  const leaveHistoryPerPage = 5
+  const visibleLeaveHistory = staffLeaves.slice((leaveHistoryPage - 1) * leaveHistoryPerPage, leaveHistoryPage * leaveHistoryPerPage)
+  const chartData = chartMode === 'previous' ? draft.previousWorkload : draft.workload
+  const chartLabels = chartData.map((_, index) => `Ngày ${index + 1}`)
+  const performanceChartData = {
+    labels: chartLabels,
+    datasets: [
+      {
+        label: 'Đơn xử lý',
+        data: chartData,
+        borderColor: '#2563eb',
+        borderWidth: 3,
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: '#2563eb',
+        pointBorderWidth: 2,
+        pointHoverBackgroundColor: '#2563eb',
+        pointHoverBorderColor: '#ffffff',
+        pointHoverRadius: 7,
+        pointRadius: chartMode === 'previous' ? 2 : 4,
+        fill: true,
+        tension: 0.42,
+        backgroundColor: (context) => {
+          const chart = context.chart
+          const { chartArea, ctx } = chart
+
+          if (!chartArea) {
+            return 'rgba(37, 99, 235, 0.12)'
+          }
+
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+          gradient.addColorStop(0, 'rgba(37, 99, 235, 0.22)')
+          gradient.addColorStop(0.65, 'rgba(96, 165, 250, 0.08)')
+          gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
+          return gradient
+        },
+      },
+    ],
+  }
+  const performanceChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+      duration: 650,
+      easing: 'easeOutQuart',
+    },
+    interaction: {
+      intersect: false,
+      mode: 'index',
+    },
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        backgroundColor: '#0f172a',
+        bodyColor: '#ffffff',
+        borderColor: 'rgba(255,255,255,0.14)',
+        borderWidth: 1,
+        cornerRadius: 14,
+        displayColors: false,
+        padding: 12,
+        titleColor: '#cbd5e1',
+        callbacks: {
+          label: (context) => `${context.parsed.y} đơn`,
+        },
+      },
+    },
+    scales: {
+      x: {
+        border: {
+          display: false,
+        },
+        grid: {
+          display: false,
+        },
+        ticks: {
+          autoSkip: true,
+          color: '#64748b',
+          font: {
+            size: 12,
+            weight: 600,
+          },
+          maxRotation: 0,
+          callback: function tickLabel(value, index) {
+            if (chartMode === 'previous') {
+              return [0, 9, 19, 29].includes(index) ? `Ngày ${index + 1}` : ''
+            }
+
+            return index === 0 || index === Math.floor(chartData.length / 2) || index === chartData.length - 1
+              ? index === chartData.length - 1
+                ? 'Hôm nay'
+                : `Ngày ${index + 1}`
+              : ''
+          },
+        },
+      },
+      y: {
+        border: {
+          display: false,
+        },
+        grid: {
+          color: 'rgba(15, 23, 42, 0.08)',
+          drawTicks: false,
+        },
+        ticks: {
+          color: '#64748b',
+          font: {
+            size: 12,
+            weight: 600,
+          },
+          padding: 12,
+        },
+      },
+    },
+  }
+
+  useEffect(() => {
+    setDraft(staff)
+    setSaveLabel('Lưu thay đổi')
+    setLeaveHistoryPage(1)
+  }, [staff])
+
+  function updateDraft(field, value) {
+    setDraft((current) => ({
+      ...current,
+      [field]: value,
+    }))
+    setSaveLabel('Lưu thay đổi')
+  }
+
+  function handleSave() {
+    onSave(draft)
+    setSaveLabel('Đã lưu')
+  }
+
+  return (
+    <div className="dashboard-page page-scroll-pad-sm space-y-6">
+      <button
+        className="motion-button inline-flex h-10 items-center gap-2 rounded-full bg-white/70 px-5 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)]"
+        onClick={onBack}
+        type="button"
+      >
+        <Icon className="text-[18px]" name="arrow_back" />
+        Quay lại
+      </button>
+
+      <section className="glass-panel rounded-[34px] p-6 sm:p-8">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <div className="relative">
+              <div className="rounded-full bg-white p-1 shadow-[0_10px_20px_rgba(15,23,42,0.08)]">
+                <img alt={draft.name} className="h-24 w-24 rounded-full object-cover" src={draft.avatar} />
+              </div>
+              <span className={`absolute bottom-2 right-2 h-5 w-5 rounded-full border-[3px] border-white ${statusMeta.dotClassName}`} />
+            </div>
+
+            <div className="space-y-4">
+              <input
+                className="w-full bg-transparent text-[36px] font-semibold leading-none tracking-[-0.03em] text-slate-950 outline-none sm:text-[42px]"
+                onChange={(event) => updateDraft('name', event.target.value)}
+                type="text"
+                value={draft.name}
+              />
+              <div className="flex flex-wrap items-center gap-3">
+                <DropdownSelect
+                  className="w-[168px]"
+                  menuClassName="w-[210px]"
+                  onChange={(value) => updateDraft('role', value)}
+                  options={roleOptions.map((option) => ({ label: option, value: option }))}
+                  value={draft.role}
+                />
+                <div className="flex items-center gap-2">
+                  <span className={`h-2.5 w-2.5 rounded-full ${statusMeta.dotClassName}`} />
+                  <DropdownSelect
+                    className="w-[182px]"
+                    menuClassName="w-[210px]"
+                    onChange={(value) => updateDraft('status', value)}
+                    options={[
+                      { label: 'Đang hoạt động', value: 'active' },
+                      { label: 'Nghỉ phép', value: 'leave' },
+                      { label: 'Chờ xếp ca', value: 'pending' },
+                    ]}
+                    value={draft.status}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              className="motion-button h-11 rounded-2xl border border-red-200 bg-red-50 px-5 text-sm font-semibold text-red-600 hover:bg-red-100"
+              onClick={() => onDelete(draft)}
+              type="button"
+            >
+              Xóa nhân viên
             </button>
-            <button className="pagination-button px-5" type="button">
-              Sau
+            <button
+              className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800"
+              onClick={handleSave}
+              type="button"
+            >
+              {saveLabel}
             </button>
+          </div>
+        </div>
+
+        <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Email liên hệ</p>
+            <input
+              className="mt-3 w-full rounded-[18px] border border-slate-900/18 bg-white/80 px-5 py-4 text-[15px] font-semibold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+              onChange={(event) => updateDraft('email', event.target.value)}
+              type="email"
+              value={draft.email}
+            />
+          </div>
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Số điện thoại</p>
+            <input
+              className="mt-3 w-full rounded-[18px] border border-slate-900/18 bg-white/80 px-5 py-4 text-[15px] font-semibold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+              onChange={(event) => updateDraft('phone', event.target.value)}
+              type="text"
+              value={draft.phone}
+            />
+          </div>
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Bộ phận / kho</p>
+            <DropdownSelect
+              className="mt-3"
+              menuClassName="w-full"
+              onChange={(value) => updateDraft('department', value)}
+              options={departmentOptions.map((option) => ({ label: option, value: option }))}
+              value={draft.department}
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ca làm việc</p>
+            <DropdownSelect
+              className="mt-3"
+              menuClassName="w-full"
+              onChange={(value) => updateDraft('shift', value)}
+              options={shiftOptions.map((option) => ({ label: option, value: option }))}
+              value={draft.shift}
+            />
+          </div>
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ngày gia nhập</p>
+            <div className="mt-3 rounded-[18px] border border-white/60 bg-white/35 px-5 py-4">
+              <div className="flex items-center gap-3">
+                <Icon className="text-[18px] text-slate-400" name="calendar_today" />
+                <input
+                  className="w-full bg-transparent text-[15px] font-semibold text-slate-700 outline-none"
+                  onChange={(event) => updateDraft('joinedAt', event.target.value)}
+                  type="text"
+                  value={draft.joinedAt}
+                />
+              </div>
+            </div>
+          </div>
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Mã nhân viên</p>
+            <div className="mt-3 flex items-center gap-3 rounded-[18px] border border-white/60 bg-white/35 px-5 py-4 text-[15px] font-semibold text-slate-700">
+              <Icon className="text-[18px] text-slate-400" name="badge" />
+              {draft.code}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="glass-card rounded-[24px] p-4 sm:p-6">
-        <div className="mb-5">
-          <h2 className="text-[24px] font-bold text-slate-950">Danh sách đơn xin nghỉ</h2>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">
-            Xem và phê duyệt các yêu cầu nghỉ phép của nhân viên.
-          </p>
+      <section className="glass-panel rounded-[34px] p-6 sm:p-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-[24px] font-semibold text-slate-950">Biểu đồ hiệu suất 30 ngày</h2>
+            <p className="mt-2 text-[15px] text-slate-500">Theo dõi hiệu suất hằng ngày.</p>
+          </div>
+          <div className="inline-flex rounded-full bg-white/70 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
+            <button
+              className={`motion-button h-10 rounded-full px-5 text-sm font-semibold ${
+                chartMode === 'current' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
+              }`}
+              onClick={() => setChartMode('current')}
+              type="button"
+            >
+              Tháng này
+            </button>
+            <button
+              className={`motion-button h-10 rounded-full px-5 text-sm font-semibold ${
+                chartMode === 'previous' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
+              }`}
+              onClick={() => setChartMode('previous')}
+              type="button"
+            >
+              Tháng trước
+            </button>
+          </div>
         </div>
 
-        <div className="space-y-3 md:hidden">
-          {leaveRows.map((leave) => (
-            <article
-              className="rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]"
-              key={`${leave.name}-${leave.type}-mobile`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <PersonCell avatar={leave.avatar} name={leave.name} />
-                <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
+        <div className="mt-8">
+          <div className="relative h-[340px] overflow-hidden rounded-[28px] border border-white/30 bg-transparent px-2 py-2">
+            <Line data={performanceChartData} options={performanceChartOptions} />
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.02fr_1fr]">
+        <section className="glass-panel rounded-[34px] p-6 sm:p-8">
+          <h2 className="text-[24px] font-semibold text-slate-950">Thông tin nghỉ phép</h2>
+
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-[24px] bg-white/45 p-5">
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ngày phép còn lại</p>
+              <p className="mt-3 text-[26px] font-bold text-blue-800">{String(draft.leaveRemaining).padStart(2, '0')} ngày</p>
+            </div>
+            <div className="rounded-[24px] bg-white/45 p-5">
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Đã sử dụng</p>
+              <p className="mt-3 text-[26px] font-bold text-slate-700">{String(draft.leaveUsed).padStart(2, '0')} ngày</p>
+            </div>
+            <div className="rounded-[24px] bg-white/45 p-5">
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Vắng có phép</p>
+              <p className="mt-3 text-[26px] font-bold text-emerald-700">{String(draft.leaveWithPermission).padStart(2, '0')} ngày</p>
+            </div>
+            <div className="rounded-[24px] bg-white/45 p-5">
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Vắng không phép</p>
+              <p className="mt-3 text-[26px] font-bold text-rose-700">{String(draft.leaveWithoutPermission).padStart(2, '0')} ngày</p>
+            </div>
+          </div>
+
+        </section>
+
+        <section className="glass-panel rounded-[34px] p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h2 className="text-[24px] font-semibold text-slate-950">Chi tiết hiệu suất</h2>
+            <span className="inline-flex rounded-full bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">↗ {draft.ordersDelta} so với tháng trước</span>
+          </div>
+
+          <div className="mt-10">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Tỷ lệ chính xác</p>
+              <p className="text-[20px] font-bold text-blue-800">{draft.accuracy}</p>
+            </div>
+            <div className="mt-4 h-2 rounded-full bg-blue-100">
+              <div className="h-2 rounded-full bg-blue-800" style={{ width: draft.accuracy }} />
+            </div>
+          </div>
+
+          <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2">
+            <div>
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Đơn hàng / giờ</p>
+              <div className="mt-3 flex items-end gap-2">
+                <span className="text-[30px] font-bold leading-none text-slate-950">{draft.ordersPerHour}</span>
+                <span className="text-sm font-semibold text-emerald-600">▲ {draft.ordersDelta}</span>
               </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Loại đơn</p>
-                  <p className="mt-1 text-slate-600">{leave.type}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Thời gian</p>
-                  <p className="mt-1 text-slate-600">{leave.time}</p>
-                </div>
+            </div>
+
+            <div>
+              <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Tỷ lệ đóng gói lỗi</p>
+              <div className="mt-3 flex items-end gap-2">
+                <span className="text-[30px] font-bold leading-none text-slate-950">{draft.errorRate}</span>
+                <span className="text-sm font-semibold text-emerald-600">▼ {draft.errorDelta}</span>
               </div>
-              <div className="mt-4 flex justify-end">
-                <DetailButton />
+            </div>
+          </div>
+
+          <div className="mt-10 border-t border-slate-900/12 pt-8">
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Phân bổ thời gian</p>
+            <div className="mt-5 h-4 overflow-hidden rounded-full bg-blue-100">
+              <div className="flex h-full">
+                <div className="bg-blue-800" style={{ width: `${draft.performanceSplit[0]}%` }} />
+                <div className="bg-blue-400" style={{ width: `${draft.performanceSplit[1]}%` }} />
+                <div className="bg-blue-200" style={{ width: `${draft.performanceSplit[2]}%` }} />
+              </div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-6 text-sm font-medium text-slate-600">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-blue-800" />
+                Đóng gói
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-blue-400" />
+                Kiểm hàng
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-blue-200" />
+                Dán nhãn
+              </span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section className="glass-panel rounded-[34px] p-6 sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-[24px] font-semibold text-slate-950">Lịch sử yêu cầu nghỉ phép</h2>
+            <p className="mt-2 text-[15px] text-slate-500">Theo dõi các yêu cầu nghỉ phép của nhân viên.</p>
+          </div>
+          <span className="inline-flex rounded-full bg-white/75 px-4 py-2 text-sm font-semibold text-slate-600">
+            {staffLeaves.length} yêu cầu
+          </span>
+        </div>
+
+        <div className="mt-6 space-y-4">
+          {visibleLeaveHistory.map((leave) => (
+            <article className="rounded-[22px] bg-white/45 px-5 py-4" key={leave.id}>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-[15px] font-semibold text-slate-900">{leave.type}</p>
+                  <p className="mt-1 text-sm text-slate-500">{leave.time}</p>
+                </div>
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                  <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
+                  <button
+                    className="motion-button text-sm font-semibold text-blue-700 hover:text-blue-800"
+                    onClick={() => onOpenLeave(leave)}
+                    type="button"
+                  >
+                    Chi tiết
+                  </button>
+                </div>
               </div>
             </article>
           ))}
         </div>
 
-        <div className="hidden overflow-x-auto md:block">
-          <table className="w-full min-w-[820px] border-collapse">
-            <thead>
-              <tr className="text-left text-[12px] font-bold uppercase tracking-[0.08em] text-slate-500">
-                <th className="px-4 pb-5">Nhân viên</th>
-                <th className="px-4 pb-5">Loại đơn</th>
-                <th className="px-4 pb-5">Thời gian</th>
-                <th className="px-4 pb-5">Trạng thái</th>
-                <th className="px-4 pb-5 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaveRows.map((leave, index) => (
-                <tr
-                  className={index < leaveRows.length - 1 ? 'border-b border-white/35' : ''}
-                  key={`${leave.name}-${leave.type}`}
-                >
-                  <td className="px-4 py-4">
-                    <PersonCell avatar={leave.avatar} name={leave.name} />
-                  </td>
-                  <td className="px-4 py-4 text-sm text-slate-600">{leave.type}</td>
-                  <td className="px-4 py-4 text-sm text-slate-600">{leave.time}</td>
-                  <td className="px-4 py-4">
-                    <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
-                  </td>
-                  <td className="px-4 py-4">
-                    <DetailButton />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Pagination
+          currentPage={leaveHistoryPage}
+          itemLabel="yêu cầu"
+          itemsPerPage={leaveHistoryPerPage}
+          onPageChange={setLeaveHistoryPage}
+          totalItems={staffLeaves.length}
+          totalPages={Math.ceil(staffLeaves.length / leaveHistoryPerPage)}
+        />
       </section>
     </div>
+  )
+}
+
+export function StaffPage() {
+  const [staffRows, setStaffRows] = useState(initialStaffRows)
+  const [leaveRows] = useState(initialLeaveRows)
+  const [selectedLeave, setSelectedLeave] = useState(null)
+  const [selectedStaffId, setSelectedStaffId] = useState(null)
+  const [staffPage, setStaffPage] = useState(1)
+  const [leavePage, setLeavePage] = useState(1)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [employeeForm, setEmployeeForm] = useState(emptyEmployeeForm)
+
+  const staffPerPage = 10
+  const leavePerPage = 2
+  const selectedStaff = useMemo(() => staffRows.find((staff) => staff.id === selectedStaffId) ?? null, [selectedStaffId, staffRows])
+  const visibleStaffRows = staffRows.slice((staffPage - 1) * staffPerPage, staffPage * staffPerPage)
+  const visibleLeaveRows = leaveRows.slice((leavePage - 1) * leavePerPage, leavePage * leavePerPage)
+
+  useEffect(() => {
+    if (!selectedStaffId) {
+      return
+    }
+
+    const stillExists = staffRows.some((staff) => staff.id === selectedStaffId)
+
+    if (!stillExists) {
+      setSelectedStaffId(null)
+    }
+  }, [selectedStaffId, staffRows])
+
+  function openEmployeeDetail(staff) {
+    setSelectedStaffId(staff.id)
+  }
+
+  function updateEmployeeForm(field, value) {
+    setEmployeeForm((current) => ({
+      ...current,
+      [field]: value,
+    }))
+  }
+
+  function handleRoleSelect(role) {
+    setEmployeeForm((current) => ({
+      ...current,
+      role,
+      shift: role === 'Quản lý kho' ? '' : current.shift,
+    }))
+    setIsRoleMenuOpen(false)
+  }
+
+  function handleAddEmployee(event) {
+    event.preventDefault()
+
+    const nextIndex = staffRows.length + 1
+    const role = employeeForm.role || 'Nhân viên kho'
+    const performanceProfile = buildPerformanceProfile(nextIndex + 30)
+    const nextStaff = {
+      id: `staff-${Date.now()}`,
+      code: `NV-${String(480 + nextIndex).padStart(4, '0')}`,
+      name: employeeForm.name || `Nhân viên mới ${nextIndex}`,
+      role,
+      shift: role === 'Quản lý kho' ? 'Cả ngày' : employeeForm.shift || shiftOptions[0],
+      status: 'pending',
+      department: 'Kho vận - HCM',
+      joinedAt: '20/05/2026',
+      email: employeeForm.email || `nhanvien${nextIndex}@kurifuri.vn`,
+      phone: employeeForm.phone || '+84 912 345 678',
+      avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&w=200&q=80',
+      leaveRemaining: 12,
+      leaveUsed: 0,
+      leaveWithPermission: 1,
+      leaveWithoutPermission: 0,
+      ...performanceProfile,
+    }
+
+    setStaffRows((current) => [nextStaff, ...current])
+    setStaffPage(1)
+    setEmployeeForm(emptyEmployeeForm)
+    setIsRoleMenuOpen(false)
+    setIsAddModalOpen(false)
+  }
+
+  function handleDeleteEmployee(employeeId) {
+    setStaffRows((current) => current.filter((staff) => staff.id !== employeeId))
+    setDeleteTarget(null)
+    setSelectedStaffId((current) => (current === employeeId ? null : current))
+  }
+
+  function handleSaveEmployee(updatedStaff) {
+    setStaffRows((current) => current.map((staff) => (staff.id === updatedStaff.id ? { ...staff, ...updatedStaff } : staff)))
+  }
+
+  if (selectedStaff) {
+    return (
+      <>
+        <EmployeeDetailPage
+          leaveRows={leaveRows}
+          onBack={() => setSelectedStaffId(null)}
+          onDelete={setDeleteTarget}
+          onSave={handleSaveEmployee}
+          onOpenLeave={setSelectedLeave}
+          staff={selectedStaff}
+        />
+
+        {selectedLeave ? <LeaveRequestModal leave={selectedLeave} onClose={() => setSelectedLeave(null)} /> : null}
+        {deleteTarget ? <DeleteEmployeeModal employee={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteEmployee} /> : null}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <div className="dashboard-page page-scroll-pad-sm space-y-5">
+        <section className="glass-panel flex flex-col gap-4 rounded-[24px] p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h1 className="page-header-title">Quản lý Nhân viên</h1>
+            <p className="page-header-subtitle">Xem và quản lý danh sách nhân viên đóng gói, trạng thái và hiệu suất.</p>
+          </div>
+
+          <button
+            className="motion-button flex h-11 items-center justify-center gap-2 self-start rounded-2xl bg-blue-700 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800 lg:self-auto"
+            onClick={() => setIsAddModalOpen(true)}
+            type="button"
+          >
+            <Icon className="text-base" name="add" />
+            Thêm nhân viên mới
+          </button>
+        </section>
+
+        <section className="glass-card rounded-[24px] p-4 sm:p-6">
+          <div className="space-y-3 md:hidden">
+            {visibleStaffRows.map((staff) => {
+              const statusMeta = statusStyles[staff.status]
+
+              return (
+                <article className="rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]" key={staff.id}>
+                  <div className="flex items-start justify-between gap-3">
+                    <ClickablePersonCell avatar={staff.avatar} name={staff.name} onClick={() => openEmployeeDetail(staff)} />
+                    <StatusPill className={statusMeta.className}>{statusMeta.label}</StatusPill>
+                  </div>
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Thông tin</p>
+                      <p className="mt-1 text-slate-600">{staff.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Chức vụ</p>
+                      <p className="mt-1 font-semibold text-blue-700">{staff.role}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Ca làm</p>
+                      <p className="mt-1 text-slate-600">{staff.shift}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between gap-3">
+                    <button className="motion-button text-sm font-semibold text-red-600 hover:text-red-700" onClick={() => setDeleteTarget(staff)} type="button">
+                      Xóa
+                    </button>
+                    <DetailButton onClick={() => openEmployeeDetail(staff)} />
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[920px] border-collapse">
+              <thead>
+                <tr className="text-left text-[12px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                  <th className="px-4 pb-5">Tên nhân viên</th>
+                  <th className="px-4 pb-5">Thông tin</th>
+                  <th className="px-4 pb-5">Trạng thái</th>
+                  <th className="px-4 pb-5">Chức vụ</th>
+                  <th className="px-4 pb-5">Ca làm</th>
+                  <th className="px-4 pb-5 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleStaffRows.map((staff, index) => {
+                  const statusMeta = statusStyles[staff.status]
+
+                  return (
+                    <tr className={index < visibleStaffRows.length - 1 ? 'border-b border-slate-900/12' : ''} key={staff.id}>
+                      <td className="px-4 py-4">
+                        <ClickablePersonCell avatar={staff.avatar} name={staff.name} onClick={() => openEmployeeDetail(staff)} />
+                      </td>
+                      <td className="px-4 py-4 text-sm text-slate-600">{staff.email}</td>
+                      <td className="px-4 py-4">
+                        <StatusPill className={statusMeta.className}>{statusMeta.label}</StatusPill>
+                      </td>
+                      <td className="px-4 py-4 text-sm font-semibold text-blue-700">{staff.role}</td>
+                      <td className="px-4 py-4 text-sm text-slate-600">{staff.shift}</td>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center justify-end gap-3">
+                          <button
+                            className="motion-button flex h-9 w-9 items-center justify-center rounded-2xl bg-red-50 text-red-600 hover:bg-red-100"
+                            onClick={() => setDeleteTarget(staff)}
+                            type="button"
+                          >
+                            <Icon className="text-[18px]" name="delete" />
+                          </button>
+                          <DetailButton onClick={() => openEmployeeDetail(staff)} />
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            currentPage={staffPage}
+            itemLabel="nhân viên"
+            itemsPerPage={staffPerPage}
+            onPageChange={setStaffPage}
+            totalItems={staffRows.length}
+            totalPages={Math.ceil(staffRows.length / staffPerPage)}
+          />
+        </section>
+
+        <section className="glass-card rounded-[24px] p-4 sm:p-6">
+          <div className="mb-5">
+            <h2 className="text-[24px] font-bold text-slate-950">Danh sách đơn xin nghỉ</h2>
+            <p className="mt-2 text-sm text-slate-600 sm:text-base">Xem và phê duyệt các yêu cầu nghỉ phép của nhân viên.</p>
+          </div>
+
+          <div className="space-y-3 md:hidden">
+            {visibleLeaveRows.map((leave) => (
+              <article className="rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]" key={`${leave.id}-mobile`}>
+                <div className="flex items-start justify-between gap-3">
+                  <ClickablePersonCell avatar={leave.avatar} name={leave.name} onClick={() => setSelectedStaffId(leave.staffId)} />
+                  <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Loại đơn</p>
+                    <p className="mt-1 text-slate-600">{leave.type}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Thời gian</p>
+                    <p className="mt-1 text-slate-600">{leave.time}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex justify-end">
+                  <DetailButton onClick={() => setSelectedLeave(leave)} />
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full min-w-[820px] border-collapse">
+              <thead>
+                <tr className="text-left text-[12px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                  <th className="px-4 pb-5">Nhân viên</th>
+                  <th className="px-4 pb-5">Loại đơn</th>
+                  <th className="px-4 pb-5">Thời gian</th>
+                  <th className="px-4 pb-5">Trạng thái</th>
+                  <th className="px-4 pb-5 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleLeaveRows.map((leave, index) => (
+                  <tr className={index < visibleLeaveRows.length - 1 ? 'border-b border-slate-900/12' : ''} key={leave.id}>
+                    <td className="px-4 py-4">
+                      <ClickablePersonCell avatar={leave.avatar} name={leave.name} onClick={() => setSelectedStaffId(leave.staffId)} />
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-600">{leave.type}</td>
+                    <td className="px-4 py-4 text-sm text-slate-600">{leave.time}</td>
+                    <td className="px-4 py-4">
+                      <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
+                    </td>
+                    <td className="px-4 py-4">
+                      <DetailButton onClick={() => setSelectedLeave(leave)} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            currentPage={leavePage}
+            itemLabel="đơn nghỉ"
+            itemsPerPage={leavePerPage}
+            onPageChange={setLeavePage}
+            totalItems={leaveRows.length}
+            totalPages={Math.ceil(leaveRows.length / leavePerPage)}
+          />
+        </section>
+      </div>
+
+      {selectedLeave ? <LeaveRequestModal leave={selectedLeave} onClose={() => setSelectedLeave(null)} /> : null}
+      {deleteTarget ? <DeleteEmployeeModal employee={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteEmployee} /> : null}
+      {isAddModalOpen ? (
+        <AddEmployeeModal
+          form={employeeForm}
+          isRoleMenuOpen={isRoleMenuOpen}
+          onClose={() => {
+            setIsAddModalOpen(false)
+            setIsRoleMenuOpen(false)
+          }}
+          onRoleSelect={handleRoleSelect}
+          onSubmit={handleAddEmployee}
+          onToggleRoleMenu={() => setIsRoleMenuOpen((current) => !current)}
+          onValueChange={updateEmployeeForm}
+        />
+      ) : null}
+    </>
   )
 }

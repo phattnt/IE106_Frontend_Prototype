@@ -1,6 +1,9 @@
 import { Icon } from './Icon.jsx'
 
-export function Topbar() {
+export function Topbar({ activePage, subscriptionTier = 'free' }) {
+  const showPlanBadge = activePage === 'settings'
+  const planLabel = subscriptionTier.toUpperCase()
+
   return (
     <header className="glass-panel fixed left-4 right-4 top-4 z-40 flex min-h-16 items-center justify-between rounded-3xl px-4 py-3 lg:left-80 lg:right-6 lg:top-5 lg:justify-end lg:rounded-full lg:px-8">
       <div className="flex items-center gap-3 lg:hidden">
@@ -21,7 +24,12 @@ export function Topbar() {
         <button className="hidden text-slate-600 transition hover:text-blue-700 sm:block" type="button">
           <Icon name="help_outline" />
         </button>
-        <div className="hidden h-8 w-px bg-white/50 sm:block" />
+        {showPlanBadge ? (
+          <span className="hidden rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-blue-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] sm:inline-flex">
+            {planLabel}
+          </span>
+        ) : null}
+        <div className="hidden h-8 w-px bg-slate-900/12 sm:block" />
         <div className="flex items-center gap-3">
           <div className="hidden text-right sm:block">
             <p className="text-sm font-semibold leading-none">Alex Rivera</p>

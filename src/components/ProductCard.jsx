@@ -1,12 +1,7 @@
 function ProductImage({ product }) {
   return (
     <div className="product-thumb relative aspect-[4/3] overflow-hidden rounded-t-[18px]">
-      <img
-        alt={product.name}
-        className="h-full w-full object-cover"
-        loading="lazy"
-        src={product.imageUrl}
-      />
+      <img alt={product.name} className="h-full w-full object-cover" loading="lazy" src={product.imageUrl} />
     </div>
   )
 }

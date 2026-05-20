@@ -2,6 +2,8 @@ import { navItems } from '../data/navigation.js'
 import { Icon } from './Icon.jsx'
 
 export function Sidebar({ activePage, onNavigate }) {
+  const settingsActive = activePage === 'settings'
+
   return (
     <aside className="glass-panel fixed left-6 top-6 z-50 hidden h-[calc(100vh-48px)] w-64 flex-col rounded-[24px] p-6 lg:flex">
       <div className="flex items-center gap-3">
@@ -37,9 +39,12 @@ export function Sidebar({ activePage, onNavigate }) {
         })}
       </nav>
 
-      <div className="border-t border-white/30 pt-6">
+      <div className="border-t border-slate-900/12 pt-6">
         <button
-          className="flex w-full items-center gap-3 rounded-full px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-white/40"
+          className={`flex w-full items-center gap-3 rounded-full px-4 py-2 text-sm font-medium transition ${
+            settingsActive ? 'bg-white/55 text-blue-800 shadow-sm' : 'text-slate-600 hover:bg-white/40'
+          }`}
+          onClick={() => onNavigate('settings')}
           type="button"
         >
           <Icon name="settings" />

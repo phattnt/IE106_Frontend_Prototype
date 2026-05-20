@@ -1,3 +1,5 @@
+﻿import { useState } from 'react'
+import { DropdownSelect } from '../components/DropdownSelect.jsx'
 import { Icon } from '../components/Icon.jsx'
 
 const statusItems = [
@@ -72,8 +74,10 @@ const videos = [
 ]
 
 export function DashboardPage() {
+  const [performanceRange, setPerformanceRange] = useState('7d')
+
   return (
-    <div className="dashboard-page space-y-5">
+    <div className="dashboard-page page-scroll-pad space-y-5">
       <section className="grid grid-cols-1 gap-5 md:grid-cols-3">
         <article className="glass-primary flex min-h-[220px] flex-col justify-between rounded-[24px] p-6 text-white">
           <div className="flex items-start justify-between">
@@ -152,11 +156,16 @@ export function DashboardPage() {
             <div>
               <h2 className="text-2xl font-bold text-slate-950">Hiệu suất hàng tuần</h2>
               <p className="mt-1 text-sm font-normal text-slate-600">Số lượng đơn hàng được quay theo ngày</p>
-            </div>
-            <select className="w-fit rounded-2xl border-0 bg-white/55 py-2 pl-4 pr-9 text-sm font-medium text-slate-800 shadow-sm">
-              <option>7 ngày qua</option>
-              <option>30 ngày qua</option>
-            </select>
+            </div>            <DropdownSelect
+              className="w-[140px]"
+              menuClassName="w-[180px]"
+              onChange={setPerformanceRange}
+              options={[
+                { label: '7 ngày qua', value: '7d' },
+                { label: '30 ngày qua', value: '30d' },
+              ]}
+              value={performanceRange}
+            />
           </div>
           <div className="relative h-44 px-2">
             <div className="absolute inset-0 flex items-end justify-between gap-4">
