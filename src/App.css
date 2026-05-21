@@ -57,6 +57,38 @@
   width: 100%;
 }
 
+.product-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+}
+
+.product-card-title {
+  min-height: 2.5em;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.studio-barcode {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #0f172a 0 3px,
+      transparent 3px 5px,
+      #0f172a 5px 7px,
+      transparent 7px 12px
+    ),
+    #ffffff;
+}
+
+.studio-scan-frame {
+  animation: studio-frame-pulse 2200ms ease-in-out infinite;
+}
+
+.studio-scan-line {
+  animation: studio-scan-line 2400ms cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
 .pagination-button {
   display: inline-flex;
   width: 40px;
@@ -140,15 +172,69 @@
 
 .product-page > .glass-panel:first-child h1,
 .dashboard-page > .glass-panel:first-child h1 {
-  font-size: 32px;
-  font-weight: 700;
+  font-size: 30px;
+  font-weight: 650;
   line-height: 1.15;
 }
 
 .product-page > .glass-panel:first-child p,
 .dashboard-page > .glass-panel:first-child p {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.6;
+}
+
+.dashboard-shell .text-slate-400:not(.material-symbols-outlined),
+.dashboard-shell .text-slate-500:not(.material-symbols-outlined),
+.dashboard-shell .text-slate-600:not(.material-symbols-outlined),
+.dashboard-shell .text-slate-700:not(.material-symbols-outlined),
+.dashboard-shell .text-slate-800:not(.material-symbols-outlined),
+.dashboard-shell .text-slate-900:not(.material-symbols-outlined),
+.dashboard-shell .text-slate-950:not(.material-symbols-outlined) {
+  color: #0f172a;
+}
+
+.dashboard-shell input,
+.dashboard-shell textarea {
+  color: #0f172a;
+}
+
+.dashboard-shell input::placeholder,
+.dashboard-shell textarea::placeholder {
+  color: #334155;
+  opacity: 1;
+}
+
+.dashboard-shell .text-\[10px\].font-bold,
+.dashboard-shell .text-\[11px\].font-bold,
+.dashboard-shell .text-\[12px\].font-bold,
+.dashboard-shell .text-xs.font-bold {
+  font-weight: 600;
+}
+
+.dashboard-shell .text-\[13px\].font-bold,
+.dashboard-shell .text-sm.font-bold,
+.dashboard-shell .text-\[15px\].font-bold {
+  font-weight: 650;
+}
+
+.dashboard-shell .text-\[10px\].font-semibold,
+.dashboard-shell .text-\[11px\].font-semibold,
+.dashboard-shell .text-\[12px\].font-semibold,
+.dashboard-shell .text-xs.font-semibold,
+.dashboard-shell .text-sm.font-semibold {
+  font-weight: 500;
+}
+
+.dashboard-shell button.h-12,
+.dashboard-shell input.h-12,
+.dashboard-shell select.h-12 {
+  height: 44px;
+}
+
+.dashboard-shell button.h-11,
+.dashboard-shell input.h-11,
+.dashboard-shell select.h-11 {
+  height: 40px;
 }
 
 .page-scroll-pad {
@@ -173,9 +259,7 @@
   animation: dropdown-enter 180ms cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: top left;
   will-change: transform, opacity;
-  border: 1px solid rgba(255, 255, 255, 0.82) !important;
   border-radius: 22px !important;
-  background: #ffffff !important;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18) !important;
 }
 
@@ -252,5 +336,130 @@
   to {
     transform: translateY(0) scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes studio-frame-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.18);
+  }
+
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0.08);
+  }
+}
+
+@keyframes studio-scan-line {
+  0% {
+    transform: translateY(-110px);
+    opacity: 0.1;
+  }
+
+  18%,
+  82% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(110px);
+    opacity: 0.1;
+  }
+}
+
+@media (max-width: 1366px) and (min-width: 1024px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+  }
+
+  .dashboard-sidebar {
+    left: 16px !important;
+    top: 16px !important;
+    width: 232px !important;
+    height: calc(100vh - 32px) !important;
+    padding: 20px !important;
+  }
+
+  .dashboard-topbar {
+    left: 272px !important;
+    right: 16px !important;
+    top: 16px !important;
+    min-height: 60px !important;
+    padding: 10px 22px !important;
+  }
+
+  .dashboard-main {
+    margin-left: 272px !important;
+    margin-right: 16px !important;
+    width: calc(100% - 17rem - 1rem) !important;
+    padding-top: 96px !important;
+  }
+
+  .product-page > .glass-panel:first-child h1,
+  .dashboard-page > .glass-panel:first-child h1 {
+    font-size: 28px;
+  }
+
+  .dashboard-shell .glass-panel.rounded-\[34px\],
+  .dashboard-shell .glass-card.rounded-\[34px\],
+  .dashboard-shell .glass-panel.rounded-\[32px\],
+  .dashboard-shell .glass-card.rounded-\[32px\],
+  .dashboard-shell .glass-panel.rounded-\[30px\],
+  .dashboard-shell .glass-card.rounded-\[30px\] {
+    border-radius: 24px !important;
+  }
+
+  .dashboard-shell .p-8 {
+    padding: 24px !important;
+  }
+
+  .dashboard-shell .px-8 {
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+
+  .dashboard-shell .py-8 {
+    padding-top: 24px !important;
+    padding-bottom: 24px !important;
+  }
+
+  .dashboard-shell .p-7 {
+    padding: 22px !important;
+  }
+
+  .dashboard-shell .p-6 {
+    padding: 20px !important;
+  }
+
+  .dashboard-shell .gap-8 {
+    gap: 24px !important;
+  }
+
+  .dashboard-shell .gap-6 {
+    gap: 20px !important;
+  }
+
+  .dashboard-shell .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 20px !important;
+  }
+
+  .dashboard-shell .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 16px !important;
+  }
+}
+
+@media (max-width: 1180px) and (min-width: 1024px) {
+  .dashboard-sidebar {
+    width: 216px !important;
+    padding: 18px !important;
+  }
+
+  .dashboard-topbar {
+    left: 248px !important;
+  }
+
+  .dashboard-main {
+    margin-left: 248px !important;
+    width: calc(100% - 15.5rem - 1rem) !important;
   }
 }

@@ -8,13 +8,13 @@ function ProductImage({ product }) {
 
 export function ProductCard({ product }) {
   return (
-    <article className="glass-card overflow-hidden rounded-[18px]">
+    <article className="glass-card flex h-full flex-col overflow-hidden rounded-[18px]">
       <ProductImage product={product} />
-      <div className="p-4">
-        <h2 className="text-base font-bold leading-tight text-slate-950">{product.name}</h2>
+      <div className="flex flex-1 flex-col p-4">
+        <h2 className="product-card-title text-base font-bold leading-tight text-slate-950">{product.name}</h2>
         <p className="mt-1.5 text-xs font-normal text-slate-600">SKU: {product.sku}</p>
 
-        <div className="mt-3 grid grid-cols-2 gap-2.5">
+        <div className="mt-auto grid grid-cols-2 gap-2.5 pt-3">
           <div className="rounded-xl bg-white/35 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]">
             <p className="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-500">Đã bán</p>
             <p className="mt-1 text-sm font-bold text-slate-950">{product.sold}</p>

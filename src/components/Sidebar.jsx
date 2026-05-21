@@ -5,7 +5,7 @@ export function Sidebar({ activePage, onNavigate }) {
   const settingsActive = activePage === 'settings'
 
   return (
-    <aside className="glass-panel fixed left-6 top-6 z-50 hidden h-[calc(100vh-48px)] w-64 flex-col rounded-[24px] p-6 lg:flex">
+    <aside className="dashboard-sidebar glass-panel fixed left-6 top-6 z-50 hidden h-[calc(100vh-48px)] w-64 flex-col rounded-[24px] p-6 lg:flex">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-700 text-white shadow-sm">
           <Icon name="package_2" className="filled" />

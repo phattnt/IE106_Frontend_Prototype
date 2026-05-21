@@ -35,6 +35,17 @@ const statusStyles = {
   },
 }
 
+const leaveDecisionStyles = {
+  approved: {
+    className: 'bg-emerald-100 text-emerald-800',
+    label: 'Đã duyệt',
+  },
+  rejected: {
+    className: 'bg-rose-100 text-rose-700',
+    label: 'Từ chối',
+  },
+}
+
 const roleOptions = ['Quản lý kho', 'Nhân viên kho', 'Giám sát kho']
 const shiftOptions = ['Ca sáng', 'Ca chiều', 'Cả ngày']
 const departmentOptions = ['Kho vận - HCM', 'Kho trung tâm - HN', 'Kho đóng gói - ĐN', 'Kho vận - Cần Thơ']
@@ -171,6 +182,8 @@ const initialStaffRows = Array.from({ length: 20 }, (_, index) => {
     id: `staff-${order}`,
     code: `NV-${String(480 + order).padStart(4, '0')}`,
     ...template,
+    gender: order % 2 === 0 ? 'Nữ' : 'Nam',
+    identityNumber: `${String(100000000 + order).padStart(9, '0')}${order % 10}`,
     name: index < staffTemplates.length ? template.name : `${template.name} ${order}`,
     email: index < staffTemplates.length ? template.email : `nhanvien${order}@kurifuri.vn`,
     phone: `+84 9${String(10000000 + order).slice(0, 8)}`,
@@ -228,6 +241,7 @@ const initialLeaveRows = Array.from({ length: 32 }, (_, index) => {
 })
 
 const emptyEmployeeForm = {
+  avatar: '',
   name: '',
   email: '',
   phone: '',
@@ -235,6 +249,23 @@ const emptyEmployeeForm = {
   gender: 'Nam',
   role: 'Quản lý kho',
   shift: '',
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+function isValidPhone(value) {
+  return /^[+\d\s.-]{9,20}$/.test(value.trim())
+}
+
+function isValidIdentityNumber(value) {
+  return /^\d{9,12}$/.test(value.trim())
+}
+
+function getLeaveDurationDays(timeText) {
+  const matched = timeText.match(/(\d+)/)
+  return matched ? Number.parseInt(matched[1], 10) : 1
 }
 
 function ModalShell({ ariaLabel, children, maxWidth = 'max-w-[720px]', onClose }) {
@@ -349,15 +380,12 @@ function DeleteEmployeeModal({ employee, onClose, onConfirm }) {
 
 function AddEmployeeModal({
   form,
-  isRoleMenuOpen,
+  formError,
   onClose,
-  onRoleSelect,
+  onAvatarUpload,
   onSubmit,
-  onToggleRoleMenu,
   onValueChange,
 }) {
-  const showShiftField = form.role !== 'Quản lý kho'
-
   return (
     <ModalShell ariaLabel="Thêm nhân viên mới" maxWidth="max-w-[640px]" onClose={onClose}>
       <div className="flex items-start justify-between border-b border-slate-900/12 px-6 py-6 sm:px-7">
@@ -370,18 +398,20 @@ function AddEmployeeModal({
         </button>
       </div>
 
-      <form onSubmit={onSubmit}>
-        <div className="space-y-6 px-6 py-7 sm:px-7">
+      <form className="flex min-h-0 flex-col" onSubmit={onSubmit}>
+        <div className="space-y-6 px-6 py-7 pb-10 sm:px-7 sm:pb-12">
           <div className="text-center">
-            <div className="relative mx-auto flex h-24 w-24 items-center justify-center rounded-full border-2 border-dashed border-blue-200 bg-slate-50 text-slate-400">
-              <Icon className="text-[34px]" name="person_add" />
-              <button
-                className="motion-button absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-white shadow-[0_10px_18px_rgba(37,99,235,0.26)]"
-                type="button"
-              >
+            <label className="relative mx-auto flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-blue-200 bg-slate-50 text-slate-400">
+              {form.avatar ? (
+                <img alt="Ảnh đại diện nhân viên mới" className="h-full w-full object-cover" src={form.avatar} />
+              ) : (
+                <Icon className="text-[34px]" name="person_add" />
+              )}
+              <span className="motion-button absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-white shadow-[0_10px_18px_rgba(37,99,235,0.26)]">
                 <Icon className="text-[18px]" name="photo_camera" />
-              </button>
-            </div>
+              </span>
+              <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={onAvatarUpload} type="file" />
+            </label>
             <p className="mt-4 text-[15px] font-medium text-slate-500">Tải lên ảnh đại diện</p>
             <p className="mt-2 text-sm text-slate-400">Hỗ trợ JPG, PNG, WEBP (tối đa 5MB)</p>
           </div>
@@ -469,52 +499,32 @@ function AddEmployeeModal({
             </div>
           </div>
 
-          <div className="relative">
+          <div>
             <label className="mb-3 block text-[15px] font-medium text-slate-800">Chức vụ</label>
-            <button
-              className={`motion-button flex h-12 w-full items-center justify-between rounded-full border bg-white px-4 text-left text-[15px] ${
-                isRoleMenuOpen ? 'border-blue-700 shadow-[0_0_0_2px_rgba(37,99,235,0.12)]' : 'border-slate-300'
-              }`}
-              onClick={onToggleRoleMenu}
-              type="button"
-            >
-              <span className={form.role ? 'text-slate-800' : 'text-slate-400'}>{form.role || 'Chọn chức vụ'}</span>
-              <Icon className={`text-[20px] text-slate-500 transition ${isRoleMenuOpen ? 'rotate-180' : ''}`} name="expand_more" />
-            </button>
-
-            {isRoleMenuOpen ? (
-              <div className="motion-dropdown absolute left-0 right-0 top-[calc(100%+12px)] z-10 overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_24px_48px_rgba(15,23,42,0.14)]">
-                {roleOptions.map((option, index) => (
-                  <button
-                    className={`flex w-full items-center px-4 py-4 text-left text-[15px] text-slate-700 transition hover:bg-slate-50 ${
-                      form.role === option ? 'bg-blue-50 text-slate-900' : ''
-                    } ${index < roleOptions.length - 1 ? 'border-b border-slate-900/8' : ''}`}
-                    key={option}
-                    onClick={() => onRoleSelect(option)}
-                    type="button"
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            ) : null}
+            <DropdownSelect
+              onChange={(value) => onValueChange('role', value)}
+              options={roleOptions.map((option) => ({ label: option, value: option }))}
+              placement="top"
+              value={form.role}
+            />
           </div>
 
-          {showShiftField ? (
-            <div>
-              <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-shift">
-                Ca làm
-              </label>              <DropdownSelect
-                onChange={(value) => onValueChange('shift', value)}
-                options={shiftOptions.map((option) => ({ label: option, value: option }))}
-                placeholder="Chọn ca làm"
-                value={form.shift}
-              />
-            </div>
-          ) : null}
+          <div>
+            <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-shift">
+              Ca làm
+            </label>
+            <DropdownSelect
+              onChange={(value) => onValueChange('shift', value)}
+              options={shiftOptions.map((option) => ({ label: option, value: option }))}
+              placeholder="Chọn ca làm"
+              value={form.shift}
+            />
+          </div>
+
+          {formError ? <p className="text-sm font-semibold text-red-600">{formError}</p> : null}
         </div>
 
-        <div className="flex items-center justify-end gap-4 border-t border-slate-900/12 px-6 py-6 sm:px-7">
+        <div className="sticky bottom-0 z-10 flex items-center justify-end gap-4 border-t border-slate-900/12 bg-white/96 px-6 py-5 backdrop-blur-md sm:px-7">
           <button className="motion-button h-11 rounded-2xl border border-slate-300 px-7 text-sm font-semibold text-slate-700" onClick={onClose} type="button">
             Hủy
           </button>
@@ -531,7 +541,14 @@ function AddEmployeeModal({
   )
 }
 
-function LeaveRequestModal({ leave, onClose }) {
+function LeaveRequestModal({ leave, onClose, onDecision }) {
+  const [managerNote, setManagerNote] = useState(leave.note)
+  const isPending = leave.status === 'Chờ duyệt'
+
+  useEffect(() => {
+    setManagerNote(leave.note)
+  }, [leave.id, leave.note])
+
   return (
     <ModalShell ariaLabel={`Chi tiết đơn xin nghỉ ${leave.code}`} maxWidth="max-w-[680px]" onClose={onClose}>
       <button
@@ -616,7 +633,12 @@ function LeaveRequestModal({ leave, onClose }) {
 
         <section>
           <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ghi chú của quản lý</p>
-          <div className="mt-3 min-h-24 rounded-[20px] border border-slate-900/8 bg-white p-4 text-[15px] text-slate-500">{leave.note}</div>
+          <textarea
+            className="mt-3 min-h-24 w-full rounded-[20px] border border-slate-900/8 bg-white p-4 text-[15px] text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+            onChange={(event) => setManagerNote(event.target.value)}
+            placeholder="Nhập ghi chú xử lý đơn nghỉ"
+            value={managerNote}
+          />
         </section>
       </div>
 
@@ -626,10 +648,20 @@ function LeaveRequestModal({ leave, onClose }) {
           <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
         </div>
         <div className="flex items-center gap-3">
-          <button className="motion-button h-11 rounded-2xl border border-slate-300 px-6 text-sm font-semibold text-slate-700" type="button">
+          <button
+            className="motion-button h-11 rounded-2xl border border-slate-300 px-6 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!isPending}
+            onClick={() => onDecision(leave, 'rejected', managerNote)}
+            type="button"
+          >
             Từ chối
           </button>
-          <button className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800" type="button">
+          <button
+            className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-300"
+            disabled={!isPending}
+            onClick={() => onDecision(leave, 'approved', managerNote)}
+            type="button"
+          >
             Phê duyệt
           </button>
         </div>
@@ -638,8 +670,9 @@ function LeaveRequestModal({ leave, onClose }) {
   )
 }
 
-function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, staff }) {
+function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, showToast, staff }) {
   const [draft, setDraft] = useState(staff)
+  const [saveError, setSaveError] = useState('')
   const [saveLabel, setSaveLabel] = useState('Lưu thay đổi')
   const [leaveHistoryPage, setLeaveHistoryPage] = useState(1)
   const [chartMode, setChartMode] = useState('current')
@@ -649,18 +682,34 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
   const visibleLeaveHistory = staffLeaves.slice((leaveHistoryPage - 1) * leaveHistoryPerPage, leaveHistoryPage * leaveHistoryPerPage)
   const chartData = chartMode === 'previous' ? draft.previousWorkload : draft.workload
   const chartLabels = chartData.map((_, index) => `Ngày ${index + 1}`)
+  const chartTone =
+    chartMode === 'previous'
+      ? {
+          fillMiddle: 'rgba(100, 116, 139, 0.08)',
+          fillTop: 'rgba(71, 85, 105, 0.22)',
+          line: '#475569',
+        }
+      : {
+          fillMiddle: 'rgba(96, 165, 250, 0.08)',
+          fillTop: 'rgba(37, 99, 235, 0.22)',
+          line: '#2563eb',
+        }
+  const detailInputClass =
+    'mt-3 h-11 w-full rounded-2xl border border-white/70 bg-white/65 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)] outline-none transition focus:border-slate-900/70 focus:bg-white focus:ring-2 focus:ring-slate-900/8'
+  const detailStaticFieldClass =
+    'mt-3 flex h-11 items-center rounded-2xl border border-white/70 bg-white/65 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)]'
   const performanceChartData = {
     labels: chartLabels,
     datasets: [
       {
         label: 'Đơn xử lý',
         data: chartData,
-        borderColor: '#2563eb',
+        borderColor: chartTone.line,
         borderWidth: 3,
         pointBackgroundColor: '#ffffff',
-        pointBorderColor: '#2563eb',
+        pointBorderColor: chartTone.line,
         pointBorderWidth: 2,
-        pointHoverBackgroundColor: '#2563eb',
+        pointHoverBackgroundColor: chartTone.line,
         pointHoverBorderColor: '#ffffff',
         pointHoverRadius: 7,
         pointRadius: chartMode === 'previous' ? 2 : 4,
@@ -675,8 +724,8 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
           }
 
           const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
-          gradient.addColorStop(0, 'rgba(37, 99, 235, 0.22)')
-          gradient.addColorStop(0.65, 'rgba(96, 165, 250, 0.08)')
+          gradient.addColorStop(0, chartTone.fillTop)
+          gradient.addColorStop(0.65, chartTone.fillMiddle)
           gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
           return gradient
         },
@@ -763,6 +812,7 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
 
   useEffect(() => {
     setDraft(staff)
+    setSaveError('')
     setSaveLabel('Lưu thay đổi')
     setLeaveHistoryPage(1)
   }, [staff])
@@ -772,12 +822,43 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
       ...current,
       [field]: value,
     }))
+    setSaveError('')
     setSaveLabel('Lưu thay đổi')
   }
 
   function handleSave() {
+    if (!draft.name.trim()) {
+      setSaveError('Cần nhập họ và tên nhân viên.')
+      showToast?.({ message: 'Vui lòng nhập họ và tên nhân viên trước khi lưu.', title: 'Thiếu họ tên', tone: 'error' })
+      return
+    }
+
+    if (!isValidEmail(draft.email)) {
+      setSaveError('Email chưa đúng định dạng.')
+      showToast?.({ message: 'Email liên hệ chưa đúng định dạng.', title: 'Email không hợp lệ', tone: 'error' })
+      return
+    }
+
+    if (!isValidPhone(draft.phone)) {
+      setSaveError('Số điện thoại chưa đúng định dạng.')
+      showToast?.({ message: 'Số điện thoại phải có từ 9 đến 20 ký tự hợp lệ.', title: 'Số điện thoại không hợp lệ', tone: 'error' })
+      return
+    }
+
+    if (!draft.shift && draft.role !== 'Quản lý kho') {
+      setSaveError('Cần chọn ca làm việc cho nhân viên.')
+      showToast?.({ message: 'Vui lòng chọn ca làm việc cho nhân viên.', title: 'Thiếu ca làm việc', tone: 'error' })
+      return
+    }
+
+    setSaveError('')
     onSave(draft)
     setSaveLabel('Đã lưu')
+    showToast?.({
+      message: `Thông tin của ${draft.name} đã được cập nhật.`,
+      title: 'Lưu nhân viên thành công',
+      tone: 'success',
+    })
   }
 
   return (
@@ -811,7 +892,6 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
               <div className="flex flex-wrap items-center gap-3">
                 <DropdownSelect
                   className="w-[168px]"
-                  menuClassName="w-[210px]"
                   onChange={(value) => updateDraft('role', value)}
                   options={roleOptions.map((option) => ({ label: option, value: option }))}
                   value={draft.role}
@@ -820,7 +900,6 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
                   <span className={`h-2.5 w-2.5 rounded-full ${statusMeta.dotClassName}`} />
                   <DropdownSelect
                     className="w-[182px]"
-                    menuClassName="w-[210px]"
                     onChange={(value) => updateDraft('status', value)}
                     options={[
                       { label: 'Đang hoạt động', value: 'active' },
@@ -856,7 +935,7 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Email liên hệ</p>
             <input
-              className="mt-3 w-full rounded-[18px] border border-slate-900/18 bg-white/80 px-5 py-4 text-[15px] font-semibold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+              className={detailInputClass}
               onChange={(event) => updateDraft('email', event.target.value)}
               type="email"
               value={draft.email}
@@ -865,7 +944,7 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Số điện thoại</p>
             <input
-              className="mt-3 w-full rounded-[18px] border border-slate-900/18 bg-white/80 px-5 py-4 text-[15px] font-semibold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+              className={detailInputClass}
               onChange={(event) => updateDraft('phone', event.target.value)}
               type="text"
               value={draft.phone}
@@ -875,7 +954,6 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Bộ phận / kho</p>
             <DropdownSelect
               className="mt-3"
-              menuClassName="w-full"
               onChange={(value) => updateDraft('department', value)}
               options={departmentOptions.map((option) => ({ label: option, value: option }))}
               value={draft.department}
@@ -888,7 +966,6 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ca làm việc</p>
             <DropdownSelect
               className="mt-3"
-              menuClassName="w-full"
               onChange={(value) => updateDraft('shift', value)}
               options={shiftOptions.map((option) => ({ label: option, value: option }))}
               value={draft.shift}
@@ -896,11 +973,11 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
           </div>
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ngày gia nhập</p>
-            <div className="mt-3 rounded-[18px] border border-white/60 bg-white/35 px-5 py-4">
-              <div className="flex items-center gap-3">
+            <div className={detailStaticFieldClass}>
+              <div className="flex w-full items-center gap-3">
                 <Icon className="text-[18px] text-slate-400" name="calendar_today" />
                 <input
-                  className="w-full bg-transparent text-[15px] font-semibold text-slate-700 outline-none"
+                  className="w-full bg-transparent text-sm font-semibold text-slate-700 outline-none"
                   onChange={(event) => updateDraft('joinedAt', event.target.value)}
                   type="text"
                   value={draft.joinedAt}
@@ -910,12 +987,14 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
           </div>
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Mã nhân viên</p>
-            <div className="mt-3 flex items-center gap-3 rounded-[18px] border border-white/60 bg-white/35 px-5 py-4 text-[15px] font-semibold text-slate-700">
+            <div className={detailStaticFieldClass}>
               <Icon className="text-[18px] text-slate-400" name="badge" />
               {draft.code}
             </div>
           </div>
         </div>
+
+        {saveError ? <p className="mt-6 text-sm font-semibold text-red-600">{saveError}</p> : null}
       </section>
 
       <section className="glass-panel rounded-[34px] p-6 sm:p-8">
@@ -924,10 +1003,13 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
             <h2 className="text-[24px] font-semibold text-slate-950">Biểu đồ hiệu suất 30 ngày</h2>
             <p className="mt-2 text-[15px] text-slate-500">Theo dõi hiệu suất hằng ngày.</p>
           </div>
-          <div className="inline-flex rounded-full bg-white/70 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
+          <div className="inline-flex rounded-2xl border border-slate-900/10 bg-slate-100/70 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
             <button
-              className={`motion-button h-10 rounded-full px-5 text-sm font-semibold ${
-                chartMode === 'current' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
+              aria-pressed={chartMode === 'current'}
+              className={`motion-button h-10 rounded-xl px-5 text-sm font-semibold ${
+                chartMode === 'current'
+                  ? 'bg-blue-700 text-white shadow-[0_10px_22px_rgba(37,99,235,0.24)]'
+                  : 'bg-white/55 text-slate-600 hover:bg-white hover:text-blue-700'
               }`}
               onClick={() => setChartMode('current')}
               type="button"
@@ -935,8 +1017,11 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
               Tháng này
             </button>
             <button
-              className={`motion-button h-10 rounded-full px-5 text-sm font-semibold ${
-                chartMode === 'previous' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'
+              aria-pressed={chartMode === 'previous'}
+              className={`motion-button h-10 rounded-xl px-5 text-sm font-semibold ${
+                chartMode === 'previous'
+                  ? 'bg-slate-800 text-white shadow-[0_10px_22px_rgba(15,23,42,0.20)]'
+                  : 'bg-white/55 text-slate-600 hover:bg-white hover:text-slate-900'
               }`}
               onClick={() => setChartMode('previous')}
               type="button"
@@ -972,7 +1057,7 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
             </div>
             <div className="rounded-[24px] bg-white/45 p-5">
               <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Vắng không phép</p>
-              <p className="mt-3 text-[26px] font-bold text-rose-700">{String(draft.leaveWithoutPermission).padStart(2, '0')} ngày</p>
+              <p className="mt-3 text-[26px] font-bold text-rose-700">{String(draft.leaveWithoutPermission)} ngày</p>
             </div>
           </div>
 
@@ -1086,21 +1171,22 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
   )
 }
 
-export function StaffPage() {
+export function StaffPage({ showToast }) {
   const [staffRows, setStaffRows] = useState(initialStaffRows)
-  const [leaveRows] = useState(initialLeaveRows)
-  const [selectedLeave, setSelectedLeave] = useState(null)
+  const [leaveRows, setLeaveRows] = useState(initialLeaveRows)
+  const [selectedLeaveId, setSelectedLeaveId] = useState(null)
   const [selectedStaffId, setSelectedStaffId] = useState(null)
   const [staffPage, setStaffPage] = useState(1)
   const [leavePage, setLeavePage] = useState(1)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [isRoleMenuOpen, setIsRoleMenuOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [employeeForm, setEmployeeForm] = useState(emptyEmployeeForm)
+  const [employeeFormError, setEmployeeFormError] = useState('')
 
   const staffPerPage = 10
   const leavePerPage = 2
   const selectedStaff = useMemo(() => staffRows.find((staff) => staff.id === selectedStaffId) ?? null, [selectedStaffId, staffRows])
+  const selectedLeave = useMemo(() => leaveRows.find((leave) => leave.id === selectedLeaveId) ?? null, [leaveRows, selectedLeaveId])
   const visibleStaffRows = staffRows.slice((staffPage - 1) * staffPerPage, staffPage * staffPerPage)
   const visibleLeaveRows = leaveRows.slice((leavePage - 1) * leavePerPage, leavePage * leavePerPage)
 
@@ -1125,19 +1211,83 @@ export function StaffPage() {
       ...current,
       [field]: value,
     }))
+    setEmployeeFormError('')
   }
 
-  function handleRoleSelect(role) {
-    setEmployeeForm((current) => ({
-      ...current,
-      role,
-      shift: role === 'Quản lý kho' ? '' : current.shift,
-    }))
-    setIsRoleMenuOpen(false)
+  function handleEmployeeAvatarUpload(event) {
+    const file = event.target.files?.[0]
+
+    if (!file) {
+      return
+    }
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setEmployeeFormError('Ảnh đại diện chỉ hỗ trợ JPG, PNG hoặc WEBP.')
+      showToast?.({
+        message: 'Ảnh đại diện chỉ hỗ trợ JPG, PNG hoặc WEBP.',
+        title: 'Ảnh không hợp lệ',
+        tone: 'error',
+      })
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setEmployeeFormError('Ảnh đại diện không được vượt quá 5MB.')
+      showToast?.({
+        message: 'Dung lượng ảnh đại diện vượt quá 5MB.',
+        title: 'Ảnh quá lớn',
+        tone: 'error',
+      })
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setEmployeeForm((current) => ({
+        ...current,
+        avatar: typeof reader.result === 'string' ? reader.result : '',
+      }))
+      setEmployeeFormError('')
+      showToast?.({
+        message: 'Ảnh đại diện đã được tải lên form thêm nhân viên.',
+        title: 'Tải ảnh thành công',
+        tone: 'success',
+      })
+    }
+    reader.readAsDataURL(file)
   }
 
   function handleAddEmployee(event) {
     event.preventDefault()
+
+    const normalizedName = employeeForm.name.trim()
+    const normalizedEmail = employeeForm.email.trim()
+    const normalizedPhone = employeeForm.phone.trim()
+    const normalizedIdentity = employeeForm.identityNumber.trim()
+
+    if (!normalizedName) {
+      setEmployeeFormError('Cần nhập họ và tên nhân viên.')
+      showToast?.({ message: 'Vui lòng nhập họ và tên nhân viên.', title: 'Thiếu họ tên', tone: 'error' })
+      return
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      setEmployeeFormError('Email chưa đúng định dạng.')
+      showToast?.({ message: 'Email nhân viên chưa đúng định dạng.', title: 'Email không hợp lệ', tone: 'error' })
+      return
+    }
+
+    if (!isValidPhone(normalizedPhone)) {
+      setEmployeeFormError('Số điện thoại chưa đúng định dạng.')
+      showToast?.({ message: 'Số điện thoại phải có từ 9 đến 20 ký tự hợp lệ.', title: 'Số điện thoại không hợp lệ', tone: 'error' })
+      return
+    }
+
+    if (!isValidIdentityNumber(normalizedIdentity)) {
+      setEmployeeFormError('CMND/CCCD phải gồm 9 đến 12 chữ số.')
+      showToast?.({ message: 'CMND/CCCD phải gồm 9 đến 12 chữ số.', title: 'Số định danh không hợp lệ', tone: 'error' })
+      return
+    }
 
     const nextIndex = staffRows.length + 1
     const role = employeeForm.role || 'Nhân viên kho'
@@ -1145,15 +1295,17 @@ export function StaffPage() {
     const nextStaff = {
       id: `staff-${Date.now()}`,
       code: `NV-${String(480 + nextIndex).padStart(4, '0')}`,
-      name: employeeForm.name || `Nhân viên mới ${nextIndex}`,
+      name: normalizedName,
       role,
       shift: role === 'Quản lý kho' ? 'Cả ngày' : employeeForm.shift || shiftOptions[0],
       status: 'pending',
       department: 'Kho vận - HCM',
       joinedAt: '20/05/2026',
-      email: employeeForm.email || `nhanvien${nextIndex}@kurifuri.vn`,
-      phone: employeeForm.phone || '+84 912 345 678',
-      avatar: 'https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&w=200&q=80',
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      avatar: employeeForm.avatar || 'https://images.unsplash.com/photo-1554151228-14d9def656e4?auto=format&fit=crop&w=200&q=80',
+      gender: employeeForm.gender,
+      identityNumber: normalizedIdentity,
       leaveRemaining: 12,
       leaveUsed: 0,
       leaveWithPermission: 1,
@@ -1164,18 +1316,71 @@ export function StaffPage() {
     setStaffRows((current) => [nextStaff, ...current])
     setStaffPage(1)
     setEmployeeForm(emptyEmployeeForm)
-    setIsRoleMenuOpen(false)
+    setEmployeeFormError('')
     setIsAddModalOpen(false)
+    showToast?.({
+      message: `${nextStaff.name} đã được thêm vào danh sách nhân viên.`,
+      title: 'Thêm nhân viên thành công',
+      tone: 'success',
+    })
   }
 
   function handleDeleteEmployee(employeeId) {
+    const deletedStaff = staffRows.find((staff) => staff.id === employeeId)
     setStaffRows((current) => current.filter((staff) => staff.id !== employeeId))
     setDeleteTarget(null)
     setSelectedStaffId((current) => (current === employeeId ? null : current))
+    showToast?.({
+      message: deletedStaff ? `${deletedStaff.name} đã bị xóa khỏi hệ thống.` : 'Nhân viên đã bị xóa khỏi hệ thống.',
+      title: 'Xóa nhân viên thành công',
+      tone: 'success',
+    })
   }
 
   function handleSaveEmployee(updatedStaff) {
     setStaffRows((current) => current.map((staff) => (staff.id === updatedStaff.id ? { ...staff, ...updatedStaff } : staff)))
+  }
+
+  function handleLeaveDecision(leave, decision, note) {
+    const nextDecision = leaveDecisionStyles[decision]
+
+    setLeaveRows((current) =>
+      current.map((item) =>
+        item.id === leave.id
+          ? {
+              ...item,
+              note: note.trim() || item.note,
+              status: nextDecision.label,
+              statusClass: nextDecision.className,
+            }
+          : item
+      )
+    )
+
+    if (decision === 'approved') {
+      const leaveDays = getLeaveDurationDays(leave.time)
+
+      setStaffRows((current) =>
+        current.map((staff) =>
+          staff.id === leave.staffId
+            ? {
+                ...staff,
+                leaveRemaining: Math.max(staff.leaveRemaining - leaveDays, 0),
+                leaveUsed: staff.leaveUsed + leaveDays,
+                leaveWithPermission: staff.leaveWithPermission + leaveDays,
+                status: 'leave',
+              }
+            : staff
+        )
+      )
+    }
+
+    setSelectedLeaveId(null)
+    showToast?.({
+      message: `Đơn nghỉ của ${leave.name} đã được ${nextDecision.label.toLowerCase()}.`,
+      title: decision === 'approved' ? 'Đã phê duyệt đơn nghỉ' : 'Đã từ chối đơn nghỉ',
+      tone: decision === 'approved' ? 'success' : 'warning',
+    })
   }
 
   if (selectedStaff) {
@@ -1185,12 +1390,19 @@ export function StaffPage() {
           leaveRows={leaveRows}
           onBack={() => setSelectedStaffId(null)}
           onDelete={setDeleteTarget}
+          onOpenLeave={(leave) => setSelectedLeaveId(leave.id)}
           onSave={handleSaveEmployee}
-          onOpenLeave={setSelectedLeave}
+          showToast={showToast}
           staff={selectedStaff}
         />
 
-        {selectedLeave ? <LeaveRequestModal leave={selectedLeave} onClose={() => setSelectedLeave(null)} /> : null}
+        {selectedLeave ? (
+          <LeaveRequestModal
+            leave={selectedLeave}
+            onClose={() => setSelectedLeaveId(null)}
+            onDecision={handleLeaveDecision}
+          />
+        ) : null}
         {deleteTarget ? <DeleteEmployeeModal employee={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteEmployee} /> : null}
       </>
     )
@@ -1331,7 +1543,7 @@ export function StaffPage() {
                   </div>
                 </div>
                 <div className="mt-4 flex justify-end">
-                  <DetailButton onClick={() => setSelectedLeave(leave)} />
+                  <DetailButton onClick={() => setSelectedLeaveId(leave.id)} />
                 </div>
               </article>
             ))}
@@ -1360,7 +1572,7 @@ export function StaffPage() {
                       <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
                     </td>
                     <td className="px-4 py-4">
-                      <DetailButton onClick={() => setSelectedLeave(leave)} />
+                      <DetailButton onClick={() => setSelectedLeaveId(leave.id)} />
                     </td>
                   </tr>
                 ))}
@@ -1379,19 +1591,24 @@ export function StaffPage() {
         </section>
       </div>
 
-      {selectedLeave ? <LeaveRequestModal leave={selectedLeave} onClose={() => setSelectedLeave(null)} /> : null}
+      {selectedLeave ? (
+        <LeaveRequestModal
+          leave={selectedLeave}
+          onClose={() => setSelectedLeaveId(null)}
+          onDecision={handleLeaveDecision}
+        />
+      ) : null}
       {deleteTarget ? <DeleteEmployeeModal employee={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteEmployee} /> : null}
       {isAddModalOpen ? (
         <AddEmployeeModal
           form={employeeForm}
-          isRoleMenuOpen={isRoleMenuOpen}
+          formError={employeeFormError}
           onClose={() => {
             setIsAddModalOpen(false)
-            setIsRoleMenuOpen(false)
+            setEmployeeFormError('')
           }}
-          onRoleSelect={handleRoleSelect}
+          onAvatarUpload={handleEmployeeAvatarUpload}
           onSubmit={handleAddEmployee}
-          onToggleRoleMenu={() => setIsRoleMenuOpen((current) => !current)}
           onValueChange={updateEmployeeForm}
         />
       ) : null}

@@ -7,35 +7,44 @@ export function DropdownSelect({
   buttonClassName = '',
   className = '',
   disabled = false,
+  footer = null,
   getOptionMeta,
   label,
   menuClassName = '',
+  menuWidth,
   onChange,
   options,
   placeholder = 'Chọn',
+  placement = 'bottom',
+  triggerClassName = '',
   theme = 'blue',
   value,
 }) {
   const [open, setOpen] = useState(false)
   const [menuStyle, setMenuStyle] = useState(null)
   const ref = useRef(null)
+  const menuRef = useRef(null)
   const selectedOption = options.find((option) => option.value === value)
   const triggerBaseClass =
     theme === 'gray'
-      ? 'border-slate-200 bg-slate-100 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.06)]'
+      ? 'border-slate-200 bg-slate-100 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)]'
       : 'border-white/70 bg-white/65 text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)]'
+  const menuBaseClass =
+    theme === 'gray'
+      ? 'border-slate-200 bg-slate-100 shadow-[0_24px_54px_rgba(15,23,42,0.16)]'
+      : 'border-white/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]'
   const tone =
     theme === 'gray'
       ? {
           activeButton: 'border-slate-300 bg-slate-100 text-slate-900 shadow-[0_16px_34px_rgba(15,23,42,0.10)]',
-          activeOption: 'font-bold text-slate-900',
+          activeOption: 'bg-slate-200/80 font-bold text-slate-950',
           check: 'text-slate-700',
-          hoverOption: 'font-semibold text-slate-700 hover:bg-slate-100 hover:text-slate-900',
+          hoverOption: 'font-semibold text-slate-700 hover:bg-slate-200/70 hover:text-slate-950',
           triggerIcon: 'text-slate-500',
         }
       : {
           activeButton: 'border-blue-200 bg-white text-slate-900 shadow-[0_16px_34px_rgba(37,99,235,0.14)]',
-          activeOption: 'font-bold text-blue-700',
+          activeOption: 'bg-blue-50 font-bold text-blue-700',
           check: 'text-blue-700',
           hoverOption: 'font-semibold text-slate-700 hover:bg-blue-50/70 hover:text-blue-700',
           triggerIcon: 'text-slate-500',
@@ -48,17 +57,26 @@ export function DropdownSelect({
       }
 
       const rect = ref.current.getBoundingClientRect()
-      const width = Math.max(rect.width, 224)
+      const requestedWidth = typeof menuWidth === 'number' ? menuWidth : rect.width
+      const width = Math.min(requestedWidth, window.innerWidth - 24)
+      const rawLeft = align === 'right' ? rect.right - width : rect.left
+      const left = Math.min(Math.max(rawLeft, 12), window.innerWidth - width - 12)
+      const top = placement === 'top' ? rect.top - 12 : rect.bottom + 12
 
       setMenuStyle({
-        left: align === 'right' ? rect.right - width : rect.left,
-        minWidth: width,
-        top: rect.bottom + 12,
+        left,
+        top,
+        transform: placement === 'top' ? 'translateY(-100%)' : 'none',
+        width,
       })
     }
 
     function handlePointerDown(event) {
-      if (ref.current && !ref.current.contains(event.target)) {
+      const target = event.target
+      const clickedTrigger = ref.current?.contains(target)
+      const clickedMenu = menuRef.current?.contains(target)
+
+      if (!clickedTrigger && !clickedMenu) {
         setOpen(false)
       }
     }
@@ -80,7 +98,7 @@ export function DropdownSelect({
       window.removeEventListener('resize', updateMenuPosition)
       window.removeEventListener('scroll', updateMenuPosition, true)
     }
-  }, [align])
+  }, [align, menuWidth, placement])
 
   useEffect(() => {
     if (!open || !ref.current) {
@@ -88,14 +106,19 @@ export function DropdownSelect({
     }
 
     const rect = ref.current.getBoundingClientRect()
-    const width = Math.max(rect.width, 224)
+    const requestedWidth = typeof menuWidth === 'number' ? menuWidth : rect.width
+    const width = Math.min(requestedWidth, window.innerWidth - 24)
+    const rawLeft = align === 'right' ? rect.right - width : rect.left
+    const left = Math.min(Math.max(rawLeft, 12), window.innerWidth - width - 12)
+    const top = placement === 'top' ? rect.top - 12 : rect.bottom + 12
 
     setMenuStyle({
-      left: align === 'right' ? rect.right - width : rect.left,
-      minWidth: width,
-      top: rect.bottom + 12,
+      left,
+      top,
+      transform: placement === 'top' ? 'translateY(-100%)' : 'none',
+      width,
     })
-  }, [align, open])
+  }, [align, menuWidth, open, placement])
 
   return (
     <div className={`relative ${className}`} ref={ref}>
@@ -103,7 +126,7 @@ export function DropdownSelect({
       <button
         className={`motion-button flex h-11 w-full items-center justify-between gap-3 rounded-2xl border px-4 text-left text-sm font-semibold transition ${triggerBaseClass} ${
           open ? tone.activeButton : ''
-        } ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
+        } ${triggerClassName} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
         type="button"
@@ -115,7 +138,8 @@ export function DropdownSelect({
       {open && menuStyle
         ? createPortal(
         <div
-          className={`motion-dropdown fixed z-[120] overflow-hidden rounded-[22px] border border-white/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] ${menuClassName}`}
+          className={`motion-dropdown fixed z-[120] overflow-hidden rounded-[22px] border ${menuBaseClass} ${menuClassName}`}
+          ref={menuRef}
           style={menuStyle}
         >
           <div className="py-3">
@@ -143,6 +167,7 @@ export function DropdownSelect({
               )
             })}
           </div>
+          {footer}
         </div>,
           document.body
         )

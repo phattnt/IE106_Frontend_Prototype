@@ -372,7 +372,7 @@ function QrScannerModal({ onClose, onScanned }) {
   )
 }
 
-export function OrderArchivePage() {
+export function OrderArchivePage({ showToast }) {
   const [orders, setOrders] = useState(orderRows)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [deleteOrder, setDeleteOrder] = useState(null)
@@ -384,11 +384,31 @@ export function OrderArchivePage() {
   function openScannedOrder() {
     setQrOpen(false)
     setSelectedOrder(orders[0])
+    showToast?.({
+      message: `Đã tìm thấy đơn ${orders[0].code} từ mã QR.`,
+      title: 'Quét QR thành công',
+      tone: 'success',
+    })
   }
 
   function confirmDelete() {
+    const deletedCode = deleteOrder.code
     setOrders((current) => current.filter((item) => item.code !== deleteOrder.code))
     setDeleteOrder(null)
+    showToast?.({
+      message: `Đơn hàng ${deletedCode} đã được xóa khỏi lưu trữ.`,
+      title: 'Xóa đơn hàng thành công',
+      tone: 'success',
+    })
+  }
+
+  function openOrderVideo(order) {
+    setSelectedOrder(order)
+    showToast?.({
+      message: `Đang mở video minh chứng của đơn ${order.code}.`,
+      title: 'Mở video đơn hàng',
+      tone: 'info',
+    })
   }
 
   return (
@@ -449,7 +469,7 @@ export function OrderArchivePage() {
                 </div>
                 <p className="mt-3 text-sm text-slate-700">{row.customer}</p>
                 <div className="mt-4 flex justify-end gap-3">
-                  <ActionButton icon="play_circle" onClick={() => setSelectedOrder(row)} tone="primary" />
+                  <ActionButton icon="play_circle" onClick={() => openOrderVideo(row)} tone="primary" />
                   <ActionButton icon="delete" onClick={() => setDeleteOrder(row)} tone="danger" />
                 </div>
               </article>
@@ -471,7 +491,7 @@ export function OrderArchivePage() {
                 </div>
                 <p className="text-[17px] text-slate-700">{row.customer}</p>
                 <div className="flex justify-end gap-3">
-                  <ActionButton icon="play_circle" onClick={() => setSelectedOrder(row)} tone="primary" />
+                  <ActionButton icon="play_circle" onClick={() => openOrderVideo(row)} tone="primary" />
                   <ActionButton icon="delete" onClick={() => setDeleteOrder(row)} tone="danger" />
                 </div>
               </div>

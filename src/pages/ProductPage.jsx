@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { DropdownSelect } from '../components/DropdownSelect.jsx'
 import { Icon } from '../components/Icon.jsx'
@@ -17,7 +17,30 @@ const categoryOptions = [
 
 const productCategoryOptions = categoryOptions.filter((option) => option.value !== 'all')
 
-function AddProductModal({ onClose, onSave }) {
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function getResponsivePageSize(container) {
+  if (!container || typeof window === 'undefined') {
+    return 8
+  }
+
+  const gap = 20
+  const minCardWidth = window.innerWidth <= 1366 ? 190 : 210
+  const estimatedCardHeight = window.innerWidth <= 1366 ? 270 : 292
+  const containerWidth = container.clientWidth
+  const topOffset = container.getBoundingClientRect().top
+  const paginationReserve = 112
+  const bottomReserve = 28
+  const availableHeight = Math.max(360, window.innerHeight - topOffset - paginationReserve - bottomReserve)
+  const columns = Math.max(1, Math.floor((containerWidth + gap) / (minCardWidth + gap)))
+  const rows = clamp(Math.floor((availableHeight + gap) / (estimatedCardHeight + gap)), 2, 4)
+
+  return clamp(columns * rows, 4, 20)
+}
+
+function AddProductModal({ onClose, onSave, showToast }) {
   const [productName, setProductName] = useState('')
   const [category, setCategory] = useState('')
   const [stock, setStock] = useState('0')
@@ -49,6 +72,11 @@ function AddProductModal({ onClose, onSave }) {
       ...current,
       { id: Date.now(), name: '', price: '' },
     ])
+    showToast?.({
+      message: 'Đã thêm một dòng biến thể để nhập kích thước, màu sắc và giá bán.',
+      title: 'Đã thêm biến thể',
+      tone: 'info',
+    })
   }
 
   function updateVariant(id, field, value) {
@@ -59,6 +87,11 @@ function AddProductModal({ onClose, onSave }) {
 
   function removeVariant(id) {
     setVariants((current) => current.filter((variant) => variant.id !== id))
+    showToast?.({
+      message: 'Biến thể sản phẩm đã được xóa khỏi form.',
+      title: 'Đã xóa biến thể',
+      tone: 'success',
+    })
   }
 
   function handleImageUpload(event) {
@@ -70,11 +103,21 @@ function AddProductModal({ onClose, onSave }) {
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       setUploadError('Chỉ hỗ trợ JPG, PNG hoặc WEBP')
+      showToast?.({
+        message: 'Chỉ hỗ trợ định dạng JPG, PNG hoặc WEBP.',
+        title: 'Ảnh không hợp lệ',
+        tone: 'error',
+      })
       return
     }
 
     if (file.size > 5 * 1024 * 1024) {
       setUploadError('Ảnh không được vượt quá 5MB')
+      showToast?.({
+        message: 'Dung lượng ảnh vượt quá giới hạn 5MB.',
+        title: 'Ảnh quá lớn',
+        tone: 'error',
+      })
       return
     }
 
@@ -82,6 +125,11 @@ function AddProductModal({ onClose, onSave }) {
     reader.onload = () => {
       setUploadError('')
       setImagePreview(typeof reader.result === 'string' ? reader.result : '')
+      showToast?.({
+        message: 'Ảnh sản phẩm đã được tải lên form.',
+        title: 'Tải ảnh thành công',
+        tone: 'success',
+      })
     }
     reader.readAsDataURL(file)
   }
@@ -99,26 +147,31 @@ function AddProductModal({ onClose, onSave }) {
 
     if (!cleanedName) {
       setFormError('Cần nhập tên sản phẩm')
+      showToast?.({ message: 'Vui lòng nhập tên sản phẩm trước khi lưu.', title: 'Thiếu tên sản phẩm', tone: 'error' })
       return
     }
 
     if (!category) {
       setFormError('Cần chọn danh mục')
+      showToast?.({ message: 'Vui lòng chọn danh mục cho sản phẩm.', title: 'Thiếu danh mục', tone: 'error' })
       return
     }
 
     if (Number.isNaN(stockValue) || stockValue < 0) {
       setFormError('Số lượng trong kho không hợp lệ')
+      showToast?.({ message: 'Số lượng tồn kho phải là số không âm.', title: 'Số lượng không hợp lệ', tone: 'error' })
       return
     }
 
     if (!imagePreview) {
       setFormError('Cần tải ảnh sản phẩm')
+      showToast?.({ message: 'Vui lòng tải ảnh để nhận diện sản phẩm trong danh mục.', title: 'Thiếu ảnh sản phẩm', tone: 'error' })
       return
     }
 
     if (cleanedVariants.length === 0) {
       setFormError('Cần ít nhất một biến thể hợp lệ')
+      showToast?.({ message: 'Cần ít nhất một biến thể có tên và giá bán.', title: 'Thiếu biến thể', tone: 'error' })
       return
     }
 
@@ -207,11 +260,11 @@ function AddProductModal({ onClose, onSave }) {
               <div>
                 <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600">Danh mục</p>
                 <DropdownSelect
-                  className="max-w-[264px]"
-                  menuClassName="w-[264px]"
+                  className="w-full max-w-[264px]"
                   onChange={setCategory}
                   options={productCategoryOptions}
                   placeholder="Chọn danh mục"
+                  triggerClassName="border-transparent bg-slate-100 text-slate-800 shadow-none focus:border-slate-300 focus:bg-white"
                   theme="gray"
                   value={category}
                 />
@@ -286,7 +339,7 @@ function AddProductModal({ onClose, onSave }) {
             Hủy
           </button>
           <button
-            className="motion-button h-11 rounded-full bg-slate-800 px-8 text-sm font-bold text-white shadow-[0_14px_28px_rgba(15,23,42,0.18)] hover:bg-slate-900"
+            className="motion-button h-11 rounded-full bg-blue-700 px-8 text-sm font-bold text-white shadow-[0_14px_28px_rgba(37,99,235,0.28)] hover:bg-blue-800"
             onClick={handleSubmit}
             type="button"
           >
@@ -311,12 +364,13 @@ function buildSkuFromName(name, index) {
   return `#${letters}-${String(500 + index).padStart(3, '0')}-N`
 }
 
-export function ProductPage() {
+export function ProductPage({ showToast }) {
+  const productGridRef = useRef(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
   const [productRows, setProductRows] = useState(initialProducts)
-  const itemsPerPage = 6
+  const [itemsPerPage, setItemsPerPage] = useState(8)
   const filteredProducts =
     selectedCategory === 'all'
       ? productRows
@@ -324,6 +378,32 @@ export function ProductPage() {
   const totalItems = filteredProducts.length
   const totalPages = Math.max(Math.ceil(totalItems / itemsPerPage), 1)
   const visibleProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  useEffect(() => {
+    function updatePageSize() {
+      const nextSize = getResponsivePageSize(productGridRef.current)
+      setItemsPerPage((current) => (current === nextSize ? current : nextSize))
+    }
+
+    updatePageSize()
+
+    const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updatePageSize) : null
+
+    if (productGridRef.current && resizeObserver) {
+      resizeObserver.observe(productGridRef.current)
+    }
+
+    window.addEventListener('resize', updatePageSize)
+
+    return () => {
+      resizeObserver?.disconnect()
+      window.removeEventListener('resize', updatePageSize)
+    }
+  }, [])
+
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages))
+  }, [totalPages])
 
   function handleAddProduct(payload) {
     const stockTone = payload.stock === 0 ? 'text-red-600' : payload.stock <= 12 ? 'text-orange-500' : 'text-emerald-600'
@@ -345,6 +425,11 @@ export function ProductPage() {
     setCurrentPage(1)
     setSelectedCategory('all')
     setShowAddModal(false)
+    showToast?.({
+      message: `${payload.name} đã được thêm vào danh mục sản phẩm.`,
+      title: 'Thêm sản phẩm thành công',
+      tone: 'success',
+    })
   }
 
   return (
@@ -361,7 +446,7 @@ export function ProductPage() {
               <DropdownSelect
                 align="right"
                 className="w-[128px]"
-                menuClassName="w-[224px]"
+                menuWidth={224}
                 onChange={(value) => {
                   setSelectedCategory(value)
                   setCurrentPage(1)
@@ -382,7 +467,7 @@ export function ProductPage() {
         </section>
 
         <section className="rounded-[30px] p-0">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
+          <div className="product-grid grid gap-5" ref={productGridRef}>
             {visibleProducts.map((product) => (
               <ProductCard key={product.sku} product={product} />
             ))}
@@ -399,7 +484,7 @@ export function ProductPage() {
         </section>
       </div>
 
-      {showAddModal ? <AddProductModal onClose={() => setShowAddModal(false)} onSave={handleAddProduct} /> : null}
+      {showAddModal ? <AddProductModal onClose={() => setShowAddModal(false)} onSave={handleAddProduct} showToast={showToast} /> : null}
     </>
   )
 }

@@ -8,24 +8,28 @@ const planCatalog = {
     name: 'Free',
     price: '0đ',
     suffix: '',
+    storage: { limit: '5 GB', percent: 24, used: '1.2 GB' },
     features: ['500 video', 'Lưu trữ 30 ngày'],
   },
   pro: {
     name: 'Pro',
     price: '500k',
     suffix: '/tháng',
+    storage: { limit: '100 GB', percent: 80, used: '80 GB' },
     features: ['2000 video dung lượng cao', 'Lưu trữ dữ liệu trong 1 năm', 'AI hỗ trợ nhận diện nâng cao'],
   },
   master: {
     name: 'Master',
     price: '2000k',
     suffix: '/tháng',
+    storage: { limit: '500 GB', percent: 16, used: '80 GB' },
     features: ['4000 video', 'Lưu trữ 3 năm', 'AI trợ giúp'],
   },
   business: {
     name: 'Business',
     price: 'Liên hệ',
     suffix: '',
+    storage: { limit: 'Không giới hạn', percent: 8, used: '80 GB' },
     features: ['Không giới hạn', 'AI nhận diện nâng cao'],
   },
 }
@@ -88,19 +92,6 @@ function getSourceStatusLabel(status) {
   return 'Mất kết nối'
 }
 
-function useOutsideClose(ref, onClose) {
-  useEffect(() => {
-    function handleClick(event) {
-      if (ref.current && !ref.current.contains(event.target)) {
-        onClose()
-      }
-    }
-
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [onClose, ref])
-}
-
 function Toggle({ enabled, onChange }) {
   return (
     <button
@@ -125,114 +116,46 @@ function Toggle({ enabled, onChange }) {
 }
 
 function CameraSourceSelect({ currentSource, onSelect }) {
-  const [open, setOpen] = useState(false)
-  const selectRef = useRef(null)
-
-  useOutsideClose(selectRef, () => setOpen(false))
-
   return (
-    <div className="relative" ref={selectRef}>
-      <span className="mb-3 block text-sm font-medium text-slate-600">Nguồn máy ảnh</span>
-      <button
-        className="glass-control flex h-11 w-full items-center justify-between rounded-2xl px-4 text-left text-base text-slate-800"
-        onClick={() => setOpen((value) => !value)}
-        type="button"
-      >
-        <span>{currentSource.name}</span>
-        <Icon className={`text-[20px] text-slate-500 transition ${open ? 'rotate-180' : ''}`} name="expand_more" />
-      </button>
-
-      {open ? (
-        <div className="motion-dropdown absolute left-0 top-[calc(100%+10px)] z-30 w-full min-w-[316px] overflow-hidden rounded-[20px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,248,255,0.96))] shadow-[0_22px_50px_rgba(15,23,42,0.16)] backdrop-blur-xl">
-          <div className="px-4 pt-4">
-            {cameraSources.map((source) => {
-              const isCurrent = currentSource.id === source.id
-              const isSelectable = source.status !== 'offline'
-
-              return (
-                <button
-                  className={`flex w-full items-center gap-3 rounded-2xl px-2 py-3 text-left transition ${
-                    isSelectable ? 'hover:bg-blue-50/70' : 'cursor-not-allowed opacity-65'
-                  }`}
-                  disabled={!isSelectable}
-                  key={source.id}
-                  onClick={() => {
-                    onSelect(source)
-                    setOpen(false)
-                  }}
-                  type="button"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className={`truncate text-[15px] ${isCurrent ? 'font-bold text-slate-950' : 'font-medium text-slate-700'}`}>
-                      {source.name}
-                    </p>
-                  </div>
-                  <span className={`rounded-xl px-3 py-1 text-xs font-semibold ${getSourceBadge(source.status)}`}>
-                    {getSourceStatusLabel(source.status)}
-                  </span>
-                  {isCurrent ? <Icon className="filled text-[20px] text-blue-700" name="check" /> : null}
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="mt-2 flex items-center justify-between border-t border-slate-900/12 px-4 py-3">
-            <span className="text-sm text-slate-400">Không thấy thiết bị?</span>
-            <button className="text-sm font-semibold text-blue-700 transition hover:text-blue-800" type="button">
-              Quét lại
-            </button>
-          </div>
+    <DropdownSelect
+      footer={
+        <div className="flex items-center justify-between border-t border-slate-900/12 px-4 py-3">
+          <span className="text-sm text-slate-400">Không thấy thiết bị?</span>
+          <button className="text-sm font-semibold text-blue-700 transition hover:text-blue-800" type="button">
+            Quét lại
+          </button>
         </div>
-      ) : null}
-    </div>
+      }
+      getOptionMeta={(option) => (
+        <span className={`rounded-xl px-3 py-1 text-xs font-semibold ${getSourceBadge(option.source.status)}`}>
+          {getSourceStatusLabel(option.source.status)}
+        </span>
+      )}
+      label="Nguồn máy ảnh"
+      onChange={(_, option) => onSelect(option.source)}
+      options={cameraSources.map((source) => ({
+        disabled: source.status === 'offline',
+        label: source.name,
+        source,
+        value: source.id,
+      }))}
+      value={currentSource.id}
+    />
   )
 }
 
 function ResolutionSelect({ currentResolution, onSelect }) {
-  const [open, setOpen] = useState(false)
-  const selectRef = useRef(null)
-
-  useOutsideClose(selectRef, () => setOpen(false))
-
   return (
-    <div className="relative" ref={selectRef}>
-      <span className="mb-3 block text-sm font-medium text-slate-600">Độ phân giải</span>
-      <button
-        className="glass-control flex h-11 w-full items-center justify-between rounded-2xl px-4 text-left text-base text-slate-800"
-        onClick={() => setOpen((value) => !value)}
-        type="button"
-      >
-        <span>{currentResolution.label}</span>
-        <Icon className={`text-[20px] text-slate-500 transition ${open ? 'rotate-180' : ''}`} name="expand_more" />
-      </button>
-
-      {open ? (
-        <div className="motion-dropdown absolute left-0 top-[calc(100%+10px)] z-20 w-full overflow-hidden rounded-[20px] border border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,248,255,0.96))] shadow-[0_22px_50px_rgba(15,23,42,0.16)] backdrop-blur-xl">
-          <div className="p-3">
-            {resolutionOptions.map((option) => {
-              const active = option.id === currentResolution.id
-
-              return (
-                <button
-                  className={`flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left transition ${
-                    active ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-blue-50/70'
-                  }`}
-                  key={option.id}
-                  onClick={() => {
-                    onSelect(option)
-                    setOpen(false)
-                  }}
-                  type="button"
-                >
-                  <span className={`text-sm ${active ? 'font-semibold' : 'font-medium'}`}>{option.label}</span>
-                  {active ? <Icon className="filled text-[20px]" name="check" /> : null}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      ) : null}
-    </div>
+    <DropdownSelect
+      label="Độ phân giải"
+      onChange={(_, option) => onSelect(option.resolution)}
+      options={resolutionOptions.map((resolution) => ({
+        label: resolution.label,
+        resolution,
+        value: resolution.id,
+      }))}
+      value={currentResolution.id}
+    />
   )
 }
 
@@ -258,7 +181,7 @@ function PlanCard({ currentTier, planId, onSelect }) {
 
   return (
     <article
-      className={`rounded-[22px] bg-[linear-gradient(180deg,rgba(196,216,247,0.9),rgba(207,223,248,0.76))] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] ${
+      className={`flex min-h-[330px] flex-col rounded-[22px] bg-[linear-gradient(180deg,rgba(196,216,247,0.9),rgba(207,223,248,0.76))] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] ${
         isCurrent ? 'ring-2 ring-blue-600 shadow-[0_18px_40px_rgba(37,99,235,0.16)]' : ''
       }`}
     >
@@ -276,7 +199,7 @@ function PlanCard({ currentTier, planId, onSelect }) {
         {plan.suffix ? <span className="pb-1 text-xl text-slate-600">{plan.suffix}</span> : null}
       </div>
 
-      <div className="mt-8 space-y-4">
+      <div className="mt-8 flex-1 space-y-4">
         {plan.features.map((feature) => (
           <div className="flex items-center gap-3 text-slate-700" key={feature}>
             <Icon className="text-[18px] text-blue-700" name="check" />
@@ -286,7 +209,7 @@ function PlanCard({ currentTier, planId, onSelect }) {
       </div>
 
       <button
-        className={`mt-10 h-11 w-full rounded-2xl text-base font-medium transition ${
+        className={`mt-8 h-11 w-full rounded-2xl text-base font-medium transition ${
           canAct
             ? 'bg-blue-700 text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800'
             : 'bg-white/55 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
@@ -672,25 +595,39 @@ function PaymentSuccessModal({ onClose, planId }) {
 }
 
 function SubscriptionStatusCard({ subscription }) {
+  const currentPlan = planCatalog[subscription.tier]
+  const storage = currentPlan.storage
   const urgencyClass =
     subscription.daysRemaining <= 7
       ? 'bg-amber-50 text-amber-700'
       : 'bg-emerald-50 text-emerald-700'
 
   return (
-    <div className="mt-6 grid grid-cols-1 gap-4 rounded-[24px] bg-white/45 p-4 lg:grid-cols-[1.4fr_0.8fr_0.8fr]">
+    <div className="mt-6 grid grid-cols-1 items-center gap-5 rounded-[24px] bg-white/45 p-4 lg:grid-cols-[0.95fr_1.2fr_0.85fr_1.25fr]">
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Subscription hiện tại</p>
         <div className="mt-2 flex items-center gap-3">
-          <span className="text-[24px] font-bold text-slate-950">{planCatalog[subscription.tier].name}</span>
+          <span className="text-[24px] font-bold leading-none text-slate-950">{currentPlan.name}</span>
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${urgencyClass}`}>
             Còn {subscription.daysRemaining} ngày
           </span>
         </div>
       </div>
       <div>
+        <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Lưu trữ gói hiện tại</p>
+        <div className="mt-2 flex items-baseline justify-between gap-3">
+          <p className="text-lg font-semibold leading-none text-slate-900">
+            {storage.used} <span className="text-sm font-medium text-slate-500">/ {storage.limit}</span>
+          </p>
+          <span className="text-sm font-semibold text-blue-700">{storage.percent}%</span>
+        </div>
+        <div className="mt-3 h-2 rounded-full bg-slate-200/80">
+          <div className="h-full rounded-full bg-blue-600" style={{ width: `${storage.percent}%` }} />
+        </div>
+      </div>
+      <div>
         <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Ngày hết hạn</p>
-        <p className="mt-2 text-lg font-semibold text-slate-900">{subscription.renewalDate}</p>
+        <p className="mt-2 text-lg font-semibold leading-none text-slate-900">{subscription.renewalDate}</p>
       </div>
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Khuyến nghị</p>
@@ -703,9 +640,12 @@ function SubscriptionStatusCard({ subscription }) {
 }
 
 export function SettingsPage({
+  showToast,
+  scrollTarget,
   subscription = { tier: 'free', daysRemaining: 0, renewalDate: '--/--/----' },
   onSubscriptionChange,
 }) {
+  const plansSectionRef = useRef(null)
   const [selectedSource, setSelectedSource] = useState(cameraSources[0])
   const [selectedResolution, setSelectedResolution] = useState(resolutionOptions[0])
   const [autoFocus, setAutoFocus] = useState(true)
@@ -719,7 +659,27 @@ export function SettingsPage({
     method: 'card',
   })
 
+  useEffect(() => {
+    if (scrollTarget?.id !== 'plans') {
+      return
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      plansSectionRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [scrollTarget])
+
   function openCheckout(planId, action) {
+    showToast?.({
+      message: `${action === 'renew' ? 'Gia hạn' : 'Nâng cấp'} gói ${planCatalog[planId].name}. Vui lòng xác nhận thông tin thanh toán.`,
+      title: 'Mở thanh toán gói dịch vụ',
+      tone: 'info',
+    })
     setCheckoutState({
       open: true,
       step: 'confirm',
@@ -744,6 +704,40 @@ export function SettingsPage({
     })
 
     setCheckoutState((current) => ({ ...current, step: 'success' }))
+    showToast?.({
+      message: `${checkoutState.action === 'renew' ? 'Gia hạn' : 'Nâng cấp'} gói ${planCatalog[checkoutState.planId].name} đã hoàn tất.`,
+      title: 'Thanh toán thành công',
+      tone: 'success',
+    })
+  }
+
+  function handleSourceChange(source) {
+    setSelectedSource(source)
+    showToast?.({
+      message: `Nguồn camera đã đổi sang ${source.name}.`,
+      title: 'Đã cập nhật nguồn camera',
+      tone: 'success',
+    })
+  }
+
+  function handleResolutionChange(resolution) {
+    setSelectedResolution(resolution)
+    showToast?.({
+      message: `Độ phân giải đã đổi sang ${resolution.label}.`,
+      title: 'Đã cập nhật độ phân giải',
+      tone: 'success',
+    })
+  }
+
+  function handleToggleSetting(label, setter) {
+    return (enabled) => {
+      setter(enabled)
+      showToast?.({
+        message: `${label} đã được ${enabled ? 'bật' : 'tắt'}.`,
+        title: 'Đã cập nhật cài đặt',
+        tone: 'success',
+      })
+    }
   }
 
   return (
@@ -769,17 +763,17 @@ export function SettingsPage({
             </div>
 
             <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
-              <CameraSourceSelect currentSource={selectedSource} onSelect={setSelectedSource} />
-              <ResolutionSelect currentResolution={selectedResolution} onSelect={setSelectedResolution} />
+              <CameraSourceSelect currentSource={selectedSource} onSelect={handleSourceChange} />
+              <ResolutionSelect currentResolution={selectedResolution} onSelect={handleResolutionChange} />
             </div>
 
             <div className="mt-8 space-y-6">
-              <SettingRow caption="Tự động lấy nét" enabled={autoFocus} onChange={setAutoFocus} />
+              <SettingRow caption="Tự động lấy nét" enabled={autoFocus} onChange={handleToggleSetting('Tự động lấy nét', setAutoFocus)} />
               <SettingRow
                 caption="Ổn định khung hình"
                 description="Giảm rung cho camera khi đóng gói"
                 enabled={stabilizer}
-                onChange={setStabilizer}
+                onChange={handleToggleSetting('Ổn định khung hình', setStabilizer)}
               />
             </div>
 
@@ -812,7 +806,7 @@ export function SettingsPage({
                 caption="Tự động xóa đơn hàng cũ"
                 description="xóa sau 30 ngày"
                 enabled={autoDelete}
-                onChange={setAutoDelete}
+                onChange={handleToggleSetting('Tự động xóa đơn hàng cũ', setAutoDelete)}
               />
             </div>
 
@@ -820,6 +814,13 @@ export function SettingsPage({
 
             <button
               className="mt-6 h-11 rounded-2xl bg-white/55 text-base font-medium text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] transition hover:bg-white/75"
+              onClick={() =>
+                showToast?.({
+                  message: 'Bộ nhớ đệm đã được xóa trong chế độ mô phỏng.',
+                  title: 'Đã xóa bộ nhớ đệm',
+                  tone: 'success',
+                })
+              }
               type="button"
             >
               Xóa bộ nhớ đệm
@@ -827,20 +828,20 @@ export function SettingsPage({
           </article>
         </section>
 
-        <section className="glass-card rounded-[30px] p-6">
+        <section className="glass-card scroll-mt-28 rounded-[30px] p-6 lg:scroll-mt-32" ref={plansSectionRef}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <Icon className="text-[23px] text-slate-900" name="workspace_premium" />
               <h2 className="text-[18px] font-bold text-slate-950">Gói dịch vụ</h2>
             </div>
             <div className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-              Gói hiện tại: {planCatalog[subscription.tier].name}
+              Gói hiện tại: {planCatalog[subscription.tier].name} · {planCatalog[subscription.tier].storage.used}/{planCatalog[subscription.tier].storage.limit}
             </div>
           </div>
 
           <SubscriptionStatusCard subscription={subscription} />
 
-          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
             {['pro', 'master', 'business'].map((planId) => (
               <PlanCard currentTier={subscription.tier} key={planId} onSelect={openCheckout} planId={planId} />
             ))}
