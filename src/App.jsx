@@ -14,6 +14,7 @@ import { StudioPage } from './pages/StudioPage.jsx'
 function App() {
   const [activePage, setActivePage] = useState('orders')
   const [settingsScrollTarget, setSettingsScrollTarget] = useState(null)
+  const [staffTarget, setStaffTarget] = useState(null)
   const [toasts, setToasts] = useState([])
   const [profile, setProfile] = useState({
     avatar:
@@ -34,7 +35,7 @@ function App() {
     setToasts((current) => current.filter((toast) => toast.id !== id))
   }, [])
 
-  const showToast = useCallback(({ duration = 3600, message = '', title, tone = 'info', icon }) => {
+  const showToast = useCallback(({ duration = 3600, message = '', title, tone = 'success', icon }) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
     const nextToast = {
       icon,
@@ -63,9 +64,9 @@ function App() {
   }
 
   const renderedPages = {
-    dashboard: <DashboardPage onNavigate={handleNavigate} showToast={showToast} />,
+    dashboard: <DashboardPage onNavigate={handleNavigate} />,
     orders: <OrderArchivePage showToast={showToast} />,
-    staff: <StaffPage showToast={showToast} />,
+    staff: <StaffPage onProfileChange={setProfile} profile={profile} showToast={showToast} staffTarget={staffTarget} />,
     products: <ProductPage showToast={showToast} />,
     settings: <SettingsPage {...pageProps.settings} />,
     profile: <ProfilePage {...pageProps.profile} />,
@@ -80,6 +81,13 @@ function App() {
       })
     } else {
       setSettingsScrollTarget(null)
+    }
+
+    if (page === 'staff') {
+      setStaffTarget({
+        id: target ?? 'managerList',
+        nonce: Date.now(),
+      })
     }
 
     setActivePage(page)

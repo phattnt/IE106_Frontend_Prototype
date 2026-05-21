@@ -30,17 +30,18 @@ export function Pagination({
   totalPages,
 }) {
   const [jumpPage, setJumpPage] = useState(`${currentPage}`)
+  const pageCount = Math.max(1, totalPages)
 
   useEffect(() => {
     setJumpPage(`${currentPage}`)
   }, [currentPage])
 
-  const visiblePages = getVisiblePages(currentPage, totalPages)
+  const visiblePages = getVisiblePages(currentPage, pageCount)
   const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1
   const endItem = Math.min(currentPage * itemsPerPage, totalItems)
 
   function goToPage(page) {
-    onPageChange(clamp(page, 1, totalPages))
+    onPageChange(clamp(page, 1, pageCount))
   }
 
   function handleJumpSubmit(event) {
@@ -96,7 +97,7 @@ export function Pagination({
 
           <button
             className="pagination-button motion-button px-4"
-            disabled={currentPage === totalPages}
+            disabled={currentPage === pageCount}
             onClick={() => goToPage(currentPage + 1)}
             type="button"
           >
@@ -104,8 +105,8 @@ export function Pagination({
           </button>
           <button
             className="pagination-button motion-button px-4"
-            disabled={currentPage === totalPages}
-            onClick={() => goToPage(totalPages)}
+            disabled={currentPage === pageCount}
+            onClick={() => goToPage(pageCount)}
             type="button"
           >
             <Icon className="text-[18px]" name="keyboard_double_arrow_right" />

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from './Icon.jsx'
 
 const profileMenuItems = [
-  { id: 'profile', icon: 'person', label: 'Chỉnh sửa hồ sơ' },
+  { id: 'staff', icon: 'person', label: 'Chỉnh sửa hồ sơ', target: 'self' },
   { id: 'settings', icon: 'settings', label: 'Cài đặt tài khoản' },
   { badge: 'Mới', id: 'settings', icon: 'verified', label: 'Nâng cấp gói cước', target: 'plans' },
 ]
@@ -121,7 +121,7 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
 
       <div className="flex items-center gap-4 sm:gap-6">
         <div className="relative" ref={notificationRef}>
-          <button className="relative text-slate-600 transition hover:text-blue-700" onClick={toggleNotifications} type="button">
+          <button className="motion-button relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:text-blue-700" onClick={toggleNotifications} type="button">
             <Icon name="notifications" />
             <span className="absolute right-0 top-0 h-2 w-2 rounded-full bg-red-500 shadow-sm" />
           </button>
@@ -159,7 +159,7 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
             </div>
           ) : null}
         </div>
-        <button className="hidden text-slate-600 transition hover:text-blue-700 sm:block" type="button">
+        <button className="motion-button hidden h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:text-blue-700 sm:flex" type="button">
           <Icon name="help_outline" />
         </button>
         {showPlanBadge ? (

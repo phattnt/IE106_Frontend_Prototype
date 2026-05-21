@@ -201,29 +201,6 @@ function SettingsModal({ settings, onChange, onClose, showToast }) {
       ...current,
       [field]: value,
     }))
-    const valueLabel =
-      field === 'cameraSource'
-        ? cameraOptions.find((option) => option.value === value)?.label
-        : field === 'resolution'
-          ? resolutionOptions.find((option) => option.value === value)?.label
-          : value
-            ? 'bật'
-            : 'tắt'
-    const fieldLabel =
-      {
-        autoFocus: 'Tự động lấy nét',
-        cameraError: 'Mô phỏng mất kết nối',
-        cameraSource: 'Nguồn camera',
-        resolution: 'Độ phân giải',
-        scanFrame: 'Khung quét mã',
-        storageFull: 'Mô phỏng dung lượng đầy',
-      }[field] ?? 'Cài đặt'
-
-    showToast?.({
-      message: `${fieldLabel} đã được cập nhật: ${valueLabel}.`,
-      title: 'Đã cập nhật cài đặt camera',
-      tone: 'success',
-    })
   }
 
   return (
@@ -470,11 +447,6 @@ export function StudioPage({ showToast }) {
 
     setIsRecording(true)
     setRecognized(true)
-    showToast?.({
-      message: `Đã nhận diện mã đơn hàng ${currentOrder.code}. Có thể bắt đầu ghi video minh chứng.`,
-      title: 'Nhận diện thành công',
-      tone: 'success',
-    })
   }
 
   function stopRecording() {
@@ -491,20 +463,10 @@ export function StudioPage({ showToast }) {
 
   function retryCamera() {
     setSettings((current) => ({ ...current, cameraError: false }))
-    showToast?.({
-      message: 'Camera đã được kết nối lại ở chế độ mô phỏng.',
-      title: 'Kết nối thành công',
-      tone: 'success',
-    })
   }
 
   function openRecordedVideo(record) {
     setSelectedVideo(record)
-    showToast?.({
-      message: `Đang mở video minh chứng của đơn ${record.code}.`,
-      title: 'Mở video minh chứng',
-      tone: 'info',
-    })
   }
 
   return (

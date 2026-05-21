@@ -11,6 +11,7 @@ import {
 import { createPortal } from 'react-dom'
 import { Line } from 'react-chartjs-2'
 import { Icon } from '../components/Icon.jsx'
+import { staffStatusStyles } from '../data/staffStatus.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip)
 
@@ -29,7 +30,7 @@ const staffProfiles = {
     name: 'Nguyễn Văn An',
     role: 'Đóng gói chính',
     status: 'Đang làm việc',
-    statusClass: 'bg-emerald-50 text-emerald-600',
+    statusClass: staffStatusStyles.active.className,
     avatar:
       'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
   },
@@ -37,15 +38,15 @@ const staffProfiles = {
     name: 'Trần Thị B',
     role: 'Kiểm kho',
     status: 'Nghỉ phép',
-    statusClass: 'bg-amber-50 text-amber-600',
+    statusClass: staffStatusStyles.leave.className,
     avatar:
       'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
   },
   cuong: {
     name: 'Lê Văn C',
     role: 'Thực tập sinh',
-    status: 'Xin nghỉ',
-    statusClass: 'bg-rose-50 text-rose-600',
+    status: 'Nghỉ phép',
+    statusClass: staffStatusStyles.leave.className,
     avatar:
       'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80',
   },
@@ -53,7 +54,7 @@ const staffProfiles = {
     name: 'Phạm Quốc Dũng',
     role: 'Điều phối ca',
     status: 'Đang làm việc',
-    statusClass: 'bg-emerald-50 text-emerald-600',
+    statusClass: staffStatusStyles.active.className,
     avatar:
       'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?auto=format&fit=crop&w=120&q=80',
   },
@@ -61,7 +62,7 @@ const staffProfiles = {
     name: 'Mai Thu Hạnh',
     role: 'Kiểm hàng',
     status: 'Đang làm việc',
-    statusClass: 'bg-emerald-50 text-emerald-600',
+    statusClass: staffStatusStyles.active.className,
     avatar:
       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
   },
@@ -69,7 +70,7 @@ const staffProfiles = {
     name: 'Đỗ Minh Khoa',
     role: 'Kho vận',
     status: 'Đang làm việc',
-    statusClass: 'bg-emerald-50 text-emerald-600',
+    statusClass: staffStatusStyles.active.className,
     avatar:
       'https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=120&q=80',
   },
@@ -515,7 +516,7 @@ function ShiftDetailModal({ detail, onClose }) {
   )
 }
 
-export function DashboardPage({ onNavigate, showToast }) {
+export function DashboardPage({ onNavigate }) {
   const [selectedDetail, setSelectedDetail] = useState(null)
 
   return (
@@ -541,11 +542,6 @@ export function DashboardPage({ onNavigate, showToast }) {
 
         <CloudStorageCard
           onUpgrade={() => {
-            showToast?.({
-              message: 'Đang mở phần gói dịch vụ trong trang cài đặt.',
-              title: 'Chuyển tới nâng cấp gói',
-              tone: 'info',
-            })
             onNavigate?.('settings', 'plans')
           }}
         />

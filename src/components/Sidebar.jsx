@@ -24,7 +24,7 @@ export function Sidebar({ activePage, onNavigate }) {
 
           return (
             <button
-              className={`flex w-full items-center gap-3 rounded-full px-4 py-2 text-left text-sm font-medium transition ${
+              className={`motion-button flex w-full items-center gap-3 rounded-full px-4 py-2 text-left text-sm font-medium transition ${
                 active ? 'bg-white/55 text-blue-800 shadow-sm' : 'text-slate-600 hover:bg-white/40'
               } ${item.disabled ? 'cursor-not-allowed opacity-70' : ''}`}
               disabled={item.disabled}
@@ -41,7 +41,7 @@ export function Sidebar({ activePage, onNavigate }) {
 
       <div className="border-t border-slate-900/12 pt-6">
         <button
-          className={`flex w-full items-center gap-3 rounded-full px-4 py-2 text-sm font-medium transition ${
+          className={`motion-button flex w-full items-center gap-3 rounded-full px-4 py-2 text-sm font-medium transition ${
             settingsActive ? 'bg-white/55 text-blue-800 shadow-sm' : 'text-slate-600 hover:bg-white/40'
           }`}
           onClick={() => onNavigate('settings')}

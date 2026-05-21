@@ -675,11 +675,6 @@ export function SettingsPage({
   }, [scrollTarget])
 
   function openCheckout(planId, action) {
-    showToast?.({
-      message: `${action === 'renew' ? 'Gia hạn' : 'Nâng cấp'} gói ${planCatalog[planId].name}. Vui lòng xác nhận thông tin thanh toán.`,
-      title: 'Mở thanh toán gói dịch vụ',
-      tone: 'info',
-    })
     setCheckoutState({
       open: true,
       step: 'confirm',

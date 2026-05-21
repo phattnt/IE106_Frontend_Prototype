@@ -297,7 +297,7 @@ function DeleteOrderModal({ onClose, onConfirm, order }) {
   )
 }
 
-function QrScannerModal({ onClose, onScanned }) {
+function QrScannerModal({ defaultOrderCode, onClose, onScanned }) {
   const [tab, setTab] = useState('camera')
   useModalLifecycle(true, onClose)
 
@@ -353,7 +353,7 @@ function QrScannerModal({ onClose, onScanned }) {
             <div className="mt-8 rounded-[20px] border border-slate-200 bg-slate-50 p-4">
               <label className="block">
                 <span className="mb-2 block text-sm font-medium text-slate-500">Mã đơn hàng</span>
-                <input className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-700 outline-none" defaultValue={orders[0].code} type="text" />
+                <input className="h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-700 outline-none" defaultValue={defaultOrderCode} type="text" />
               </label>
             </div>
 
@@ -383,12 +383,9 @@ export function OrderArchivePage({ showToast }) {
 
   function openScannedOrder() {
     setQrOpen(false)
-    setSelectedOrder(orders[0])
-    showToast?.({
-      message: `Đã tìm thấy đơn ${orders[0].code} từ mã QR.`,
-      title: 'Quét QR thành công',
-      tone: 'success',
-    })
+    if (orders[0]) {
+      setSelectedOrder(orders[0])
+    }
   }
 
   function confirmDelete() {
@@ -404,11 +401,6 @@ export function OrderArchivePage({ showToast }) {
 
   function openOrderVideo(order) {
     setSelectedOrder(order)
-    showToast?.({
-      message: `Đang mở video minh chứng của đơn ${order.code}.`,
-      title: 'Mở video đơn hàng',
-      tone: 'info',
-    })
   }
 
   return (
@@ -513,7 +505,7 @@ export function OrderArchivePage({ showToast }) {
 
       {selectedOrder ? <OrderProofModal onClose={() => setSelectedOrder(null)} order={selectedOrder} /> : null}
       {deleteOrder ? <DeleteOrderModal onClose={() => setDeleteOrder(null)} onConfirm={confirmDelete} order={deleteOrder} /> : null}
-      {qrOpen ? <QrScannerModal onClose={() => setQrOpen(false)} onScanned={openScannedOrder} /> : null}
+      {qrOpen ? <QrScannerModal defaultOrderCode={orders[0]?.code ?? ''} onClose={() => setQrOpen(false)} onScanned={openScannedOrder} /> : null}
     </>
   )
 }

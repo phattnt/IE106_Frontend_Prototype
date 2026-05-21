@@ -14,26 +14,9 @@ import { Line } from 'react-chartjs-2'
 import { DropdownSelect } from '../components/DropdownSelect.jsx'
 import { Icon } from '../components/Icon.jsx'
 import { Pagination } from '../components/Pagination.jsx'
+import { staffStatusStyles as statusStyles } from '../data/staffStatus.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
-
-const statusStyles = {
-  active: {
-    label: 'Đang làm việc',
-    className: 'bg-emerald-100 text-emerald-800',
-    dotClassName: 'bg-emerald-500',
-  },
-  leave: {
-    label: 'Nghỉ phép',
-    className: 'bg-rose-100 text-rose-700',
-    dotClassName: 'bg-amber-400',
-  },
-  pending: {
-    label: 'Chờ xếp ca',
-    className: 'bg-slate-200 text-slate-700',
-    dotClassName: 'bg-slate-400',
-  },
-}
 
 const leaveDecisionStyles = {
   approved: {
@@ -207,7 +190,7 @@ const leaveTemplates = [
     time: '1 ngày (18/10)',
     status: 'Đã duyệt',
     statusClass: 'bg-emerald-100 text-emerald-800',
-    reason: 'Xin nghỉ 1 ngày để giải quyết công việc gia đình đã lên lịch từ trước.',
+    reason: 'Nghỉ phép 1 ngày để giải quyết công việc gia đình đã lên lịch từ trước.',
     attachment: 'don_xin_nghi_ca_nhan.pdf',
     leaveBalance: { total: '12 ngày', used: '4 ngày', remain: '8 ngày' },
     note: 'Đã được phê duyệt và sắp xếp nhân sự thay ca.',
@@ -248,7 +231,7 @@ const emptyEmployeeForm = {
   identityNumber: '',
   gender: 'Nam',
   role: 'Quản lý kho',
-  shift: '',
+  shift: 'Cả ngày',
 }
 
 function isValidEmail(value) {
@@ -266,6 +249,14 @@ function isValidIdentityNumber(value) {
 function getLeaveDurationDays(timeText) {
   const matched = timeText.match(/(\d+)/)
   return matched ? Number.parseInt(matched[1], 10) : 1
+}
+
+function formatDate(value) {
+  const day = `${value.getDate()}`.padStart(2, '0')
+  const month = `${value.getMonth() + 1}`.padStart(2, '0')
+  const year = value.getFullYear()
+
+  return `${day}/${month}/${year}`
 }
 
 function ModalShell({ ariaLabel, children, maxWidth = 'max-w-[720px]', onClose }) {
@@ -313,7 +304,7 @@ function StatusPill({ children, className }) {
 
 function ClickablePersonCell({ avatar, name, onClick }) {
   return (
-    <button className="flex items-center gap-3 text-left" onClick={onClick} type="button">
+    <button className="motion-button flex items-center gap-3 rounded-2xl px-2 py-1 text-left" onClick={onClick} type="button">
       <img alt={name} className="h-10 w-10 rounded-full object-cover shadow-sm" src={avatar} />
       <span className="whitespace-nowrap text-sm font-bold text-slate-900 transition hover:text-blue-700">{name}</span>
     </button>
@@ -386,6 +377,8 @@ function AddEmployeeModal({
   onSubmit,
   onValueChange,
 }) {
+  const employeeSelectTriggerClass = '!h-12 !rounded-full !border-slate-300 !bg-white !text-slate-800 !shadow-none'
+
   return (
     <ModalShell ariaLabel="Thêm nhân viên mới" maxWidth="max-w-[640px]" onClose={onClose}>
       <div className="flex items-start justify-between border-b border-slate-900/12 px-6 py-6 sm:px-7">
@@ -400,21 +393,28 @@ function AddEmployeeModal({
 
       <form className="flex min-h-0 flex-col" onSubmit={onSubmit}>
         <div className="space-y-6 px-6 py-7 pb-10 sm:px-7 sm:pb-12">
-          <div className="text-center">
-            <label className="relative mx-auto flex h-24 w-24 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-blue-200 bg-slate-50 text-slate-400">
+          <label className="motion-button flex cursor-pointer items-center gap-4 rounded-[22px] border border-dashed border-blue-200 bg-blue-50/45 p-4 text-left hover:border-blue-300 hover:bg-blue-50/70">
+            <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-blue-700 shadow-[0_10px_22px_rgba(37,99,235,0.12)]">
               {form.avatar ? (
                 <img alt="Ảnh đại diện nhân viên mới" className="h-full w-full object-cover" src={form.avatar} />
               ) : (
-                <Icon className="text-[34px]" name="person_add" />
+                <Icon className="text-[30px]" name="person_add" />
               )}
-              <span className="motion-button absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full bg-blue-700 text-white shadow-[0_10px_18px_rgba(37,99,235,0.26)]">
-                <Icon className="text-[18px]" name="photo_camera" />
+              <span className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-700 text-white shadow-[0_8px_16px_rgba(37,99,235,0.24)]">
+                <Icon className="text-[16px]" name="photo_camera" />
               </span>
-              <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={onAvatarUpload} type="file" />
-            </label>
-            <p className="mt-4 text-[15px] font-medium text-slate-500">Tải lên ảnh đại diện</p>
-            <p className="mt-2 text-sm text-slate-400">Hỗ trợ JPG, PNG, WEBP (tối đa 5MB)</p>
-          </div>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-semibold text-slate-900">Ảnh đại diện</span>
+              <span className="mt-1 block text-sm text-slate-500">
+                {form.avatar ? 'Đã chọn ảnh đại diện. Bấm để thay ảnh khác.' : 'Tải ảnh JPG, PNG hoặc WEBP, tối đa 5MB.'}
+              </span>
+            </span>
+            <span className="hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm sm:inline-flex">
+              Tải lên
+            </span>
+            <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={onAvatarUpload} type="file" />
+          </label>
 
           <div>
             <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-name">
@@ -505,6 +505,7 @@ function AddEmployeeModal({
               onChange={(value) => onValueChange('role', value)}
               options={roleOptions.map((option) => ({ label: option, value: option }))}
               placement="top"
+              triggerClassName={employeeSelectTriggerClass}
               value={form.role}
             />
           </div>
@@ -517,6 +518,7 @@ function AddEmployeeModal({
               onChange={(value) => onValueChange('shift', value)}
               options={shiftOptions.map((option) => ({ label: option, value: option }))}
               placeholder="Chọn ca làm"
+              triggerClassName={employeeSelectTriggerClass}
               value={form.shift}
             />
           </div>
@@ -541,7 +543,7 @@ function AddEmployeeModal({
   )
 }
 
-function LeaveRequestModal({ leave, onClose, onDecision }) {
+function LeaveRequestModal({ canDecide = true, leave, onClose, onDecision }) {
   const [managerNote, setManagerNote] = useState(leave.note)
   const isPending = leave.status === 'Chờ duyệt'
 
@@ -550,7 +552,7 @@ function LeaveRequestModal({ leave, onClose, onDecision }) {
   }, [leave.id, leave.note])
 
   return (
-    <ModalShell ariaLabel={`Chi tiết đơn xin nghỉ ${leave.code}`} maxWidth="max-w-[680px]" onClose={onClose}>
+    <ModalShell ariaLabel={`Chi tiết đơn nghỉ phép ${leave.code}`} maxWidth="max-w-[680px]" onClose={onClose}>
       <button
         className="motion-button absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:text-slate-800"
         onClick={onClose}
@@ -560,7 +562,7 @@ function LeaveRequestModal({ leave, onClose, onDecision }) {
       </button>
 
       <div className="border-b border-slate-900/12 px-8 py-6">
-        <h2 className="text-[24px] font-bold text-slate-950">Chi tiết đơn xin nghỉ</h2>
+        <h2 className="text-[24px] font-bold text-slate-950">Chi tiết đơn nghỉ phép</h2>
         <p className="mt-2 text-[15px] text-slate-500">
           Mã đơn: {leave.code} • Ngày tạo: {leave.createdAt}
         </p>
@@ -604,7 +606,7 @@ function LeaveRequestModal({ leave, onClose, onDecision }) {
         <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Tài liệu đính kèm</p>
-            <button className="mt-3 flex items-center gap-3 rounded-[18px] border border-slate-900/8 bg-white px-3 py-3 text-blue-700" type="button">
+            <button className="motion-button mt-3 flex items-center gap-3 rounded-[18px] border border-slate-900/8 bg-white px-3 py-3 text-blue-700 hover:bg-blue-50/70" type="button">
               <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
                 <Icon className="text-[18px]" name="description" />
               </span>
@@ -634,7 +636,8 @@ function LeaveRequestModal({ leave, onClose, onDecision }) {
         <section>
           <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ghi chú của quản lý</p>
           <textarea
-            className="mt-3 min-h-24 w-full rounded-[20px] border border-slate-900/8 bg-white p-4 text-[15px] text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+            className="mt-3 min-h-24 w-full rounded-[20px] border border-slate-900/8 bg-white p-4 text-[15px] text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 disabled:bg-slate-50 disabled:text-slate-500"
+            disabled={!canDecide}
             onChange={(event) => setManagerNote(event.target.value)}
             placeholder="Nhập ghi chú xử lý đơn nghỉ"
             value={managerNote}
@@ -647,36 +650,209 @@ function LeaveRequestModal({ leave, onClose, onDecision }) {
           <span>Trạng thái:</span>
           <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
         </div>
-        <div className="flex items-center gap-3">
+        {canDecide ? (
+          <div className="flex items-center gap-3">
+            <button
+              className="motion-button h-11 rounded-2xl border border-slate-300 px-6 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!isPending}
+              onClick={() => onDecision(leave, 'rejected', managerNote)}
+              type="button"
+            >
+              Từ chối
+            </button>
+            <button
+              className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-300"
+              disabled={!isPending}
+              onClick={() => onDecision(leave, 'approved', managerNote)}
+              type="button"
+            >
+              Phê duyệt
+            </button>
+          </div>
+        ) : (
           <button
-            className="motion-button h-11 rounded-2xl border border-slate-300 px-6 text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-            disabled={!isPending}
-            onClick={() => onDecision(leave, 'rejected', managerNote)}
+            className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800"
+            onClick={onClose}
             type="button"
           >
-            Từ chối
+            Đóng
           </button>
-          <button
-            className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-blue-300"
-            disabled={!isPending}
-            onClick={() => onDecision(leave, 'approved', managerNote)}
-            type="button"
-          >
-            Phê duyệt
-          </button>
-        </div>
+        )}
       </div>
     </ModalShell>
   )
 }
 
-function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, showToast, staff }) {
+function CreateLeaveRequestModal({ onClose, onSubmit, showToast, staff }) {
+  const [type, setType] = useState('Nghỉ phép năm')
+  const [time, setTime] = useState('1 ngày (22/10)')
+  const [reason, setReason] = useState('')
+  const [attachmentFile, setAttachmentFile] = useState(null)
+  const [formError, setFormError] = useState('')
+
+  function handleAttachmentChange(event) {
+    const file = event.target.files?.[0]
+
+    if (!file) {
+      return
+    }
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp']
+    const allowedExtensions = /\.(pdf|jpe?g|png|webp)$/i.test(file.name)
+
+    if (!allowedTypes.includes(file.type) && !allowedExtensions) {
+      setFormError('Tệp đính kèm chỉ hỗ trợ PDF, JPG, PNG hoặc WEBP.')
+      showToast?.({ message: 'Tệp đính kèm chỉ hỗ trợ PDF, JPG, PNG hoặc WEBP.', title: 'Tệp không hợp lệ', tone: 'error' })
+      event.target.value = ''
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setFormError('Tệp đính kèm không được vượt quá 10MB.')
+      showToast?.({ message: 'Dung lượng tệp đính kèm vượt quá 10MB.', title: 'Tệp quá lớn', tone: 'error' })
+      event.target.value = ''
+      return
+    }
+
+    setAttachmentFile(file)
+    setFormError('')
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+
+    if (!time.trim()) {
+      setFormError('Cần nhập thời gian nghỉ.')
+      showToast?.({ message: 'Vui lòng nhập thời gian nghỉ trước khi gửi đơn.', title: 'Thiếu thời gian nghỉ', tone: 'error' })
+      return
+    }
+
+    if (!reason.trim()) {
+      setFormError('Cần nhập lý do nghỉ phép.')
+      showToast?.({ message: 'Vui lòng nhập lý do nghỉ phép trước khi gửi đơn.', title: 'Thiếu lý do nghỉ', tone: 'error' })
+      return
+    }
+
+    setFormError('')
+    onSubmit({
+      attachment: attachmentFile?.name ?? 'Không có tệp đính kèm',
+      reason: reason.trim(),
+      time: time.trim(),
+      type,
+    })
+  }
+
+  return (
+    <ModalShell ariaLabel={`Tạo đơn nghỉ phép cho ${staff.name}`} maxWidth="max-w-[620px]" onClose={onClose}>
+      <div className="flex items-start justify-between border-b border-slate-900/12 px-6 py-6 sm:px-7">
+        <div>
+          <h2 className="text-[22px] font-bold text-slate-950">Tạo đơn nghỉ phép</h2>
+          <p className="mt-2 text-[15px] text-slate-500">{staff.name} · {staff.code}</p>
+        </div>
+        <button className="motion-button text-slate-400 hover:text-slate-700" onClick={onClose} type="button">
+          <Icon className="text-[26px]" name="close" />
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-5 px-6 py-6 sm:px-7">
+          <div>
+            <p className="mb-3 text-[15px] font-medium text-slate-800">Loại đơn</p>
+            <DropdownSelect
+              onChange={setType}
+              options={['Nghỉ phép năm', 'Nghỉ bệnh', 'Việc riêng'].map((option) => ({ label: option, value: option }))}
+              value={type}
+            />
+          </div>
+
+          <label className="block">
+            <span className="mb-3 block text-[15px] font-medium text-slate-800">Thời gian nghỉ</span>
+            <input
+              className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+              onChange={(event) => setTime(event.target.value)}
+              placeholder="Ví dụ: 1 ngày (22/10)"
+              type="text"
+              value={time}
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-3 block text-[15px] font-medium text-slate-800">Lý do chi tiết</span>
+            <textarea
+              className="min-h-28 w-full rounded-[20px] border border-slate-300 bg-white p-4 text-[15px] leading-7 text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Nhập lý do nghỉ phép"
+              value={reason}
+            />
+          </label>
+
+          <div>
+            <span className="mb-3 block text-[15px] font-medium text-slate-800">Tệp đính kèm</span>
+            <label className="motion-button flex cursor-pointer items-center gap-4 rounded-[20px] border border-dashed border-slate-300 bg-white p-4 hover:border-blue-300 hover:bg-blue-50/50">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+                <Icon className="text-[22px]" name={attachmentFile ? 'description' : 'upload_file'} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-semibold text-slate-900">
+                  {attachmentFile ? attachmentFile.name : 'Chọn tệp đính kèm'}
+                </span>
+                <span className="mt-1 block text-xs text-slate-500">PDF, JPG, PNG hoặc WEBP, tối đa 10MB.</span>
+              </span>
+              <span className="hidden rounded-full bg-blue-700 px-4 py-2 text-sm font-semibold text-white shadow-sm sm:inline-flex">
+                {attachmentFile ? 'Đổi tệp' : 'Tải lên'}
+              </span>
+              <input
+                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+                className="sr-only"
+                onChange={handleAttachmentChange}
+                type="file"
+              />
+            </label>
+            {attachmentFile ? (
+              <button
+                className="motion-button mt-3 text-sm font-semibold text-red-600 hover:text-red-700"
+                onClick={() => setAttachmentFile(null)}
+                type="button"
+              >
+                Xóa tệp đã chọn
+              </button>
+            ) : null}
+          </div>
+
+          {formError ? <p className="text-sm font-semibold text-red-600">{formError}</p> : null}
+        </div>
+
+        <div className="flex items-center justify-end gap-4 border-t border-slate-900/12 px-6 py-5 sm:px-7">
+          <button className="motion-button h-11 rounded-2xl border border-slate-300 px-6 text-sm font-semibold text-slate-700" onClick={onClose} type="button">
+            Hủy
+          </button>
+          <button className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800" type="submit">
+            Gửi đơn
+          </button>
+        </div>
+      </form>
+    </ModalShell>
+  )
+}
+
+function EmployeeDetailPage({
+  canManage = true,
+  embedded = false,
+  leaveRows,
+  onBack,
+  onCreateLeave,
+  onDelete,
+  onSave,
+  onOpenLeave,
+  showBack = true,
+  showToast,
+  staff,
+}) {
   const [draft, setDraft] = useState(staff)
   const [saveError, setSaveError] = useState('')
   const [saveLabel, setSaveLabel] = useState('Lưu thay đổi')
   const [leaveHistoryPage, setLeaveHistoryPage] = useState(1)
   const [chartMode, setChartMode] = useState('current')
-  const statusMeta = statusStyles[draft.status]
   const staffLeaves = leaveRows.filter((leave) => leave.staffId === staff.id)
   const leaveHistoryPerPage = 5
   const visibleLeaveHistory = staffLeaves.slice((leaveHistoryPage - 1) * leaveHistoryPerPage, leaveHistoryPage * leaveHistoryPerPage)
@@ -862,15 +1038,17 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
   }
 
   return (
-    <div className="dashboard-page page-scroll-pad-sm space-y-6">
-      <button
-        className="motion-button inline-flex h-10 items-center gap-2 rounded-full bg-white/70 px-5 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)]"
-        onClick={onBack}
-        type="button"
-      >
-        <Icon className="text-[18px]" name="arrow_back" />
-        Quay lại
-      </button>
+    <div className={embedded ? 'space-y-6' : 'dashboard-page page-scroll-pad-sm space-y-6'}>
+      {showBack ? (
+        <button
+          className="motion-button inline-flex h-10 items-center gap-2 rounded-full bg-white/70 px-5 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)]"
+          onClick={onBack}
+          type="button"
+        >
+          <Icon className="text-[18px]" name="arrow_back" />
+          Quay lại
+        </button>
+      ) : null}
 
       <section className="glass-panel rounded-[34px] p-6 sm:p-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
@@ -879,7 +1057,6 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
               <div className="rounded-full bg-white p-1 shadow-[0_10px_20px_rgba(15,23,42,0.08)]">
                 <img alt={draft.name} className="h-24 w-24 rounded-full object-cover" src={draft.avatar} />
               </div>
-              <span className={`absolute bottom-2 right-2 h-5 w-5 rounded-full border-[3px] border-white ${statusMeta.dotClassName}`} />
             </div>
 
             <div className="space-y-4">
@@ -896,31 +1073,20 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
                   options={roleOptions.map((option) => ({ label: option, value: option }))}
                   value={draft.role}
                 />
-                <div className="flex items-center gap-2">
-                  <span className={`h-2.5 w-2.5 rounded-full ${statusMeta.dotClassName}`} />
-                  <DropdownSelect
-                    className="w-[182px]"
-                    onChange={(value) => updateDraft('status', value)}
-                    options={[
-                      { label: 'Đang hoạt động', value: 'active' },
-                      { label: 'Nghỉ phép', value: 'leave' },
-                      { label: 'Chờ xếp ca', value: 'pending' },
-                    ]}
-                    value={draft.status}
-                  />
-                </div>
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button
-              className="motion-button h-11 rounded-2xl border border-red-200 bg-red-50 px-5 text-sm font-semibold text-red-600 hover:bg-red-100"
-              onClick={() => onDelete(draft)}
-              type="button"
-            >
-              Xóa nhân viên
-            </button>
+            {canManage ? (
+              <button
+                className="motion-button h-11 rounded-2xl border border-red-200 bg-red-50 px-5 text-sm font-semibold text-red-600 hover:bg-red-100"
+                onClick={() => onDelete(draft)}
+                type="button"
+              >
+                Xóa nhân viên
+              </button>
+            ) : null}
             <button
               className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800"
               onClick={handleSave}
@@ -1130,9 +1296,21 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
             <h2 className="text-[24px] font-semibold text-slate-950">Lịch sử yêu cầu nghỉ phép</h2>
             <p className="mt-2 text-[15px] text-slate-500">Theo dõi các yêu cầu nghỉ phép của nhân viên.</p>
           </div>
-          <span className="inline-flex rounded-full bg-white/75 px-4 py-2 text-sm font-semibold text-slate-600">
-            {staffLeaves.length} yêu cầu
-          </span>
+          <div className="flex flex-wrap items-center gap-3">
+            {onCreateLeave ? (
+              <button
+                className="motion-button flex h-11 items-center gap-2 rounded-2xl bg-blue-700 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800"
+                onClick={onCreateLeave}
+                type="button"
+              >
+                <Icon className="text-[18px]" name="add" />
+                Tạo đơn nghỉ phép
+              </button>
+            ) : null}
+            <span className="inline-flex rounded-full bg-white/75 px-4 py-2 text-sm font-semibold text-slate-600">
+              {staffLeaves.length} yêu cầu
+            </span>
+          </div>
         </div>
 
         <div className="mt-6 space-y-4">
@@ -1171,11 +1349,13 @@ function EmployeeDetailPage({ leaveRows, onBack, onDelete, onSave, onOpenLeave, 
   )
 }
 
-export function StaffPage({ showToast }) {
+export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) {
   const [staffRows, setStaffRows] = useState(initialStaffRows)
   const [leaveRows, setLeaveRows] = useState(initialLeaveRows)
+  const [staffViewMode, setStaffViewMode] = useState('manager')
   const [selectedLeaveId, setSelectedLeaveId] = useState(null)
   const [selectedStaffId, setSelectedStaffId] = useState(null)
+  const [leaveCreateTarget, setLeaveCreateTarget] = useState(null)
   const [staffPage, setStaffPage] = useState(1)
   const [leavePage, setLeavePage] = useState(1)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -1185,13 +1365,49 @@ export function StaffPage({ showToast }) {
 
   const staffPerPage = 10
   const leavePerPage = 2
-  const selectedStaff = useMemo(() => staffRows.find((staff) => staff.id === selectedStaffId) ?? null, [selectedStaffId, staffRows])
   const selectedLeave = useMemo(() => leaveRows.find((leave) => leave.id === selectedLeaveId) ?? null, [leaveRows, selectedLeaveId])
   const visibleStaffRows = staffRows.slice((staffPage - 1) * staffPerPage, staffPage * staffPerPage)
   const visibleLeaveRows = leaveRows.slice((leavePage - 1) * leavePerPage, leavePage * leavePerPage)
+  const employeeSelf = useMemo(() => {
+    const profileRole = roleOptions.includes(profile?.title) ? profile.title : 'Quản lý kho'
+    const profileDepartment = departmentOptions.includes(profile?.department) ? profile.department : 'Kho vận - HCM'
+
+    return {
+      id: 'profile-self',
+      code: 'QL-0001',
+      name: profile?.name ?? 'Quản lý',
+      role: profileRole,
+      shift: 'Cả ngày',
+      status: 'active',
+      department: profileDepartment,
+      joinedAt: '12/03/2022',
+      email: profile?.email ?? '',
+      phone: profile?.phone ?? '',
+      avatar: profile?.avatar ?? '',
+      gender: 'Nam',
+      identityNumber: '100000001',
+      leaveRemaining: 12,
+      leaveUsed: 3,
+      leaveWithPermission: 5,
+      leaveWithoutPermission: 0,
+      ...buildPerformanceProfile(88),
+    }
+  }, [profile])
+  const selectedStaff = useMemo(() => {
+    if (selectedStaffId === employeeSelf.id) {
+      return employeeSelf
+    }
+
+    return staffRows.find((staff) => staff.id === selectedStaffId) ?? null
+  }, [employeeSelf, selectedStaffId, staffRows])
+  const isSelfProfileSelected = selectedStaff?.id === employeeSelf.id
 
   useEffect(() => {
     if (!selectedStaffId) {
+      return
+    }
+
+    if (selectedStaffId === employeeSelf.id) {
       return
     }
 
@@ -1200,17 +1416,40 @@ export function StaffPage({ showToast }) {
     if (!stillExists) {
       setSelectedStaffId(null)
     }
-  }, [selectedStaffId, staffRows])
+  }, [employeeSelf.id, selectedStaffId, staffRows])
+
+  useEffect(() => {
+    if (!staffTarget) {
+      return
+    }
+
+    setSelectedStaffId(staffTarget.id === 'self' ? employeeSelf.id : null)
+    setSelectedLeaveId(null)
+    setLeaveCreateTarget(null)
+    setStaffViewMode('manager')
+  }, [employeeSelf.id, staffTarget])
 
   function openEmployeeDetail(staff) {
     setSelectedStaffId(staff.id)
   }
 
   function updateEmployeeForm(field, value) {
-    setEmployeeForm((current) => ({
-      ...current,
-      [field]: value,
-    }))
+    setEmployeeForm((current) => {
+      const nextForm = {
+        ...current,
+        [field]: value,
+      }
+
+      if (field === 'role' && value === 'Quản lý kho') {
+        nextForm.shift = 'Cả ngày'
+      }
+
+      if (field === 'role' && current.role === 'Quản lý kho' && value !== 'Quản lý kho') {
+        nextForm.shift = ''
+      }
+
+      return nextForm
+    })
     setEmployeeFormError('')
   }
 
@@ -1248,11 +1487,6 @@ export function StaffPage({ showToast }) {
         avatar: typeof reader.result === 'string' ? reader.result : '',
       }))
       setEmployeeFormError('')
-      showToast?.({
-        message: 'Ảnh đại diện đã được tải lên form thêm nhân viên.',
-        title: 'Tải ảnh thành công',
-        tone: 'success',
-      })
     }
     reader.readAsDataURL(file)
   }
@@ -1338,7 +1572,57 @@ export function StaffPage({ showToast }) {
   }
 
   function handleSaveEmployee(updatedStaff) {
+    if (updatedStaff.id === employeeSelf.id) {
+      onProfileChange?.((current) => ({
+        ...current,
+        avatar: updatedStaff.avatar,
+        department: updatedStaff.department,
+        email: updatedStaff.email,
+        name: updatedStaff.name,
+        phone: updatedStaff.phone,
+        title: updatedStaff.role,
+      }))
+      return
+    }
+
     setStaffRows((current) => current.map((staff) => (staff.id === updatedStaff.id ? { ...staff, ...updatedStaff } : staff)))
+  }
+
+  function handleCreateLeaveRequest(payload) {
+    if (!leaveCreateTarget) {
+      return
+    }
+
+    const totalLeaveDays = leaveCreateTarget.leaveRemaining + leaveCreateTarget.leaveUsed
+    const nextLeave = {
+      id: `leave-${Date.now()}`,
+      code: `#LREQ-2026-${String(leaveRows.length + 43).padStart(4, '0')}`,
+      createdAt: formatDate(new Date()),
+      role: `${leaveCreateTarget.code} • ${leaveCreateTarget.role}`,
+      name: leaveCreateTarget.name,
+      avatar: leaveCreateTarget.avatar,
+      staffId: leaveCreateTarget.id,
+      type: payload.type,
+      time: payload.time,
+      status: 'Chờ duyệt',
+      statusClass: 'bg-amber-100 text-amber-700',
+      reason: payload.reason,
+      attachment: payload.attachment,
+      leaveBalance: {
+        total: `${totalLeaveDays} ngày`,
+        used: `${leaveCreateTarget.leaveUsed} ngày`,
+        remain: `${leaveCreateTarget.leaveRemaining} ngày`,
+      },
+      note: 'Đơn mới tạo, đang chờ quản lý xử lý.',
+    }
+
+    setLeaveRows((current) => [nextLeave, ...current])
+    setLeaveCreateTarget(null)
+    showToast?.({
+      message: `Đơn nghỉ phép ${nextLeave.code} của ${leaveCreateTarget.name} đã được gửi.`,
+      title: 'Tạo đơn nghỉ phép thành công',
+      tone: 'success',
+    })
   }
 
   function handleLeaveDecision(leave, decision, note) {
@@ -1383,12 +1667,14 @@ export function StaffPage({ showToast }) {
     })
   }
 
-  if (selectedStaff) {
+  if (staffViewMode === 'manager' && selectedStaff) {
     return (
       <>
         <EmployeeDetailPage
+          canManage={!isSelfProfileSelected}
           leaveRows={leaveRows}
           onBack={() => setSelectedStaffId(null)}
+          onCreateLeave={isSelfProfileSelected ? () => setLeaveCreateTarget(employeeSelf) : undefined}
           onDelete={setDeleteTarget}
           onOpenLeave={(leave) => setSelectedLeaveId(leave.id)}
           onSave={handleSaveEmployee}
@@ -1398,9 +1684,18 @@ export function StaffPage({ showToast }) {
 
         {selectedLeave ? (
           <LeaveRequestModal
+            canDecide={!isSelfProfileSelected}
             leave={selectedLeave}
             onClose={() => setSelectedLeaveId(null)}
             onDecision={handleLeaveDecision}
+          />
+        ) : null}
+        {leaveCreateTarget ? (
+          <CreateLeaveRequestModal
+            onClose={() => setLeaveCreateTarget(null)}
+            onSubmit={handleCreateLeaveRequest}
+            showToast={showToast}
+            staff={leaveCreateTarget}
           />
         ) : null}
         {deleteTarget ? <DeleteEmployeeModal employee={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteEmployee} /> : null}
@@ -1413,20 +1708,66 @@ export function StaffPage({ showToast }) {
       <div className="dashboard-page page-scroll-pad-sm space-y-5">
         <section className="glass-panel flex flex-col gap-4 rounded-[24px] p-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="page-header-title">Quản lý Nhân viên</h1>
-            <p className="page-header-subtitle">Xem và quản lý danh sách nhân viên đóng gói, trạng thái và hiệu suất.</p>
+            <h1 className="page-header-title">{staffViewMode === 'manager' ? 'Quản lý Nhân viên' : 'Thông tin nhân viên'}</h1>
+            <p className="page-header-subtitle">
+              {staffViewMode === 'manager'
+                ? 'Xem và quản lý danh sách nhân viên đóng gói, trạng thái và hiệu suất.'
+                : 'Nhân viên chỉ xem thông tin cá nhân, ca làm và lịch sử nghỉ của mình.'}
+            </p>
           </div>
 
-          <button
-            className="motion-button flex h-11 items-center justify-center gap-2 self-start rounded-2xl bg-blue-700 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800 lg:self-auto"
-            onClick={() => setIsAddModalOpen(true)}
-            type="button"
-          >
-            <Icon className="text-base" name="add" />
-            Thêm nhân viên mới
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex rounded-full bg-white/55 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
+              {[
+                ['manager', 'Quản lý'],
+                ['employee', 'Nhân viên'],
+              ].map(([mode, label]) => (
+                <button
+                  className={`motion-button h-10 rounded-full px-4 text-sm font-semibold ${
+                    staffViewMode === mode ? 'bg-blue-700 text-white shadow-[0_10px_22px_rgba(37,99,235,0.22)]' : 'text-slate-700 hover:bg-white/70'
+                  }`}
+                  key={mode}
+                  onClick={() => {
+                    setStaffViewMode(mode)
+                    setSelectedStaffId(null)
+                    setSelectedLeaveId(null)
+                  }}
+                  type="button"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {staffViewMode === 'manager' ? (
+              <button
+                className="motion-button flex h-11 items-center justify-center gap-2 self-start rounded-2xl bg-blue-700 px-5 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800 lg:self-auto"
+                onClick={() => setIsAddModalOpen(true)}
+                type="button"
+              >
+                <Icon className="text-base" name="add" />
+                Thêm nhân viên mới
+              </button>
+            ) : null}
+          </div>
         </section>
 
+        {staffViewMode === 'employee' ? (
+          <EmployeeDetailPage
+            canManage={false}
+            embedded
+            leaveRows={leaveRows}
+            onBack={() => null}
+            onCreateLeave={() => setLeaveCreateTarget(employeeSelf)}
+            onDelete={setDeleteTarget}
+            onOpenLeave={(leave) => setSelectedLeaveId(leave.id)}
+            onSave={handleSaveEmployee}
+            showBack={false}
+            showToast={showToast}
+            staff={employeeSelf}
+          />
+        ) : (
+          <>
         <section className="glass-card rounded-[24px] p-4 sm:p-6">
           <div className="space-y-3 md:hidden">
             {visibleStaffRows.map((staff) => {
@@ -1521,7 +1862,7 @@ export function StaffPage({ showToast }) {
 
         <section className="glass-card rounded-[24px] p-4 sm:p-6">
           <div className="mb-5">
-            <h2 className="text-[24px] font-bold text-slate-950">Danh sách đơn xin nghỉ</h2>
+            <h2 className="text-[24px] font-bold text-slate-950">Danh sách đơn nghỉ phép</h2>
             <p className="mt-2 text-sm text-slate-600 sm:text-base">Xem và phê duyệt các yêu cầu nghỉ phép của nhân viên.</p>
           </div>
 
@@ -1589,13 +1930,24 @@ export function StaffPage({ showToast }) {
             totalPages={Math.ceil(leaveRows.length / leavePerPage)}
           />
         </section>
+          </>
+        )}
       </div>
 
       {selectedLeave ? (
         <LeaveRequestModal
+          canDecide={staffViewMode === 'manager'}
           leave={selectedLeave}
           onClose={() => setSelectedLeaveId(null)}
           onDecision={handleLeaveDecision}
+        />
+      ) : null}
+      {leaveCreateTarget ? (
+        <CreateLeaveRequestModal
+          onClose={() => setLeaveCreateTarget(null)}
+          onSubmit={handleCreateLeaveRequest}
+          showToast={showToast}
+          staff={leaveCreateTarget}
         />
       ) : null}
       {deleteTarget ? <DeleteEmployeeModal employee={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteEmployee} /> : null}

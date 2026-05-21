@@ -72,11 +72,6 @@ function AddProductModal({ onClose, onSave, showToast }) {
       ...current,
       { id: Date.now(), name: '', price: '' },
     ])
-    showToast?.({
-      message: 'Đã thêm một dòng biến thể để nhập kích thước, màu sắc và giá bán.',
-      title: 'Đã thêm biến thể',
-      tone: 'info',
-    })
   }
 
   function updateVariant(id, field, value) {
@@ -87,11 +82,6 @@ function AddProductModal({ onClose, onSave, showToast }) {
 
   function removeVariant(id) {
     setVariants((current) => current.filter((variant) => variant.id !== id))
-    showToast?.({
-      message: 'Biến thể sản phẩm đã được xóa khỏi form.',
-      title: 'Đã xóa biến thể',
-      tone: 'success',
-    })
   }
 
   function handleImageUpload(event) {
@@ -125,11 +115,6 @@ function AddProductModal({ onClose, onSave, showToast }) {
     reader.onload = () => {
       setUploadError('')
       setImagePreview(typeof reader.result === 'string' ? reader.result : '')
-      showToast?.({
-        message: 'Ảnh sản phẩm đã được tải lên form.',
-        title: 'Tải ảnh thành công',
-        tone: 'success',
-      })
     }
     reader.readAsDataURL(file)
   }
