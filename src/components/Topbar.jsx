@@ -121,9 +121,21 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
 
       <div className="flex items-center gap-4 sm:gap-6">
         <div className="relative" ref={notificationRef}>
-          <button className="motion-button relative flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:text-blue-700" onClick={toggleNotifications} type="button">
+          <button
+            aria-label="Mở thông báo"
+            className={`motion-button relative flex h-11 w-11 items-center justify-center rounded-full border transition ${
+              notificationOpen
+                ? 'border-blue-200 bg-white text-blue-700 shadow-[0_12px_28px_rgba(37,99,235,0.18)]'
+                : 'border-transparent bg-white/35 text-slate-600 hover:border-white/80 hover:bg-white/72 hover:text-blue-700 hover:shadow-[0_12px_28px_rgba(42,76,130,0.12)]'
+            }`}
+            onClick={toggleNotifications}
+            type="button"
+          >
             <Icon name="notifications" />
-            <span className="absolute right-0 top-0 h-2 w-2 rounded-full bg-red-500 shadow-sm" />
+            <span className="absolute right-0.5 top-0.5 flex h-3 w-3 items-center justify-center">
+              <span className="absolute inset-0 rounded-full bg-red-500/25" />
+              <span className="h-2 w-2 rounded-full bg-red-500 shadow-sm" />
+            </span>
           </button>
 
           {notificationOpen ? (

@@ -393,25 +393,20 @@ function AddEmployeeModal({
 
       <form className="flex min-h-0 flex-col" onSubmit={onSubmit}>
         <div className="space-y-6 px-6 py-7 pb-10 sm:px-7 sm:pb-12">
-          <label className="motion-button flex cursor-pointer items-center gap-4 rounded-[22px] border border-dashed border-blue-200 bg-blue-50/45 p-4 text-left hover:border-blue-300 hover:bg-blue-50/70">
-            <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white text-blue-700 shadow-[0_10px_22px_rgba(37,99,235,0.12)]">
+          <label className="motion-button flex cursor-pointer flex-col items-center bg-white px-6 py-8 text-center">
+            <span className="relative flex h-28 w-28 items-center justify-center overflow-visible rounded-full border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400">
               {form.avatar ? (
                 <img alt="Ảnh đại diện nhân viên mới" className="h-full w-full object-cover" src={form.avatar} />
               ) : (
-                <Icon className="text-[30px]" name="person_add" />
+                <Icon className="text-[42px]" name="person_add" />
               )}
-              <span className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-700 text-white shadow-[0_8px_16px_rgba(37,99,235,0.24)]">
-                <Icon className="text-[16px]" name="photo_camera" />
+              <span className="absolute bottom-0 right-0 z-10 flex h-10 w-10 translate-x-1 translate-y-1 items-center justify-center rounded-full border-4 border-white bg-blue-700 text-white shadow-[0_12px_22px_rgba(37,99,235,0.28)]">
+                <Icon className="text-[18px]" name="photo_camera" />
               </span>
             </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-semibold text-slate-900">Ảnh đại diện</span>
-              <span className="mt-1 block text-sm text-slate-500">
-                {form.avatar ? 'Đã chọn ảnh đại diện. Bấm để thay ảnh khác.' : 'Tải ảnh JPG, PNG hoặc WEBP, tối đa 5MB.'}
-              </span>
-            </span>
-            <span className="hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm sm:inline-flex">
-              Tải lên
+            <span className="mt-5 block text-[15px] font-semibold text-slate-700">Tải lên ảnh đại diện</span>
+            <span className="mt-1.5 block text-sm text-slate-400">
+              {form.avatar ? 'Bấm để thay đổi ảnh đại diện.' : 'Hỗ trợ JPG, PNG, WEBP (tối đa 5MB)'}
             </span>
             <input accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={onAvatarUpload} type="file" />
           </label>
@@ -1078,15 +1073,6 @@ function EmployeeDetailPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {canManage ? (
-              <button
-                className="motion-button h-11 rounded-2xl border border-red-200 bg-red-50 px-5 text-sm font-semibold text-red-600 hover:bg-red-100"
-                onClick={() => onDelete(draft)}
-                type="button"
-              >
-                Xóa nhân viên
-              </button>
-            ) : null}
             <button
               className="motion-button h-11 rounded-2xl bg-blue-700 px-6 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800"
               onClick={handleSave}
@@ -1353,6 +1339,7 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
   const [staffRows, setStaffRows] = useState(initialStaffRows)
   const [leaveRows, setLeaveRows] = useState(initialLeaveRows)
   const [staffViewMode, setStaffViewMode] = useState('manager')
+  const [staffSearch, setStaffSearch] = useState('')
   const [selectedLeaveId, setSelectedLeaveId] = useState(null)
   const [selectedStaffId, setSelectedStaffId] = useState(null)
   const [leaveCreateTarget, setLeaveCreateTarget] = useState(null)
@@ -1366,8 +1353,18 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
   const staffPerPage = 10
   const leavePerPage = 2
   const selectedLeave = useMemo(() => leaveRows.find((leave) => leave.id === selectedLeaveId) ?? null, [leaveRows, selectedLeaveId])
-  const visibleStaffRows = staffRows.slice((staffPage - 1) * staffPerPage, staffPage * staffPerPage)
   const visibleLeaveRows = leaveRows.slice((leavePage - 1) * leavePerPage, leavePage * leavePerPage)
+  const normalizedStaffSearch = staffSearch.trim().toLowerCase()
+  const filteredStaffRows = useMemo(() => {
+    if (!normalizedStaffSearch) {
+      return staffRows
+    }
+
+    return staffRows.filter((staff) =>
+      [staff.name, staff.email, staff.code, staff.role, staff.shift].some((value) => value.toLowerCase().includes(normalizedStaffSearch))
+    )
+  }, [normalizedStaffSearch, staffRows])
+  const visibleStaffRows = filteredStaffRows.slice((staffPage - 1) * staffPerPage, staffPage * staffPerPage)
   const employeeSelf = useMemo(() => {
     const profileRole = roleOptions.includes(profile?.title) ? profile.title : 'Quản lý kho'
     const profileDepartment = departmentOptions.includes(profile?.department) ? profile.department : 'Kho vận - HCM'
@@ -1417,6 +1414,18 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
       setSelectedStaffId(null)
     }
   }, [employeeSelf.id, selectedStaffId, staffRows])
+
+  useEffect(() => {
+    setStaffPage(1)
+  }, [normalizedStaffSearch])
+
+  useEffect(() => {
+    const nextTotalPages = Math.max(1, Math.ceil(filteredStaffRows.length / staffPerPage))
+
+    if (staffPage > nextTotalPages) {
+      setStaffPage(nextTotalPages)
+    }
+  }, [filteredStaffRows.length, staffPage])
 
   useEffect(() => {
     if (!staffTarget) {
@@ -1768,17 +1777,51 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
           />
         ) : (
           <>
+        <section className="flex flex-col gap-4 xl:flex-row">
+          <label className="glass-card flex h-13 flex-1 items-center rounded-full px-5">
+            <input
+              className="w-full bg-transparent text-base text-slate-700 outline-none placeholder:text-slate-400"
+              id="staff-search"
+              onChange={(event) => setStaffSearch(event.target.value)}
+              placeholder="Nhập tên nhân viên, email, mã NV..."
+              type="text"
+              value={staffSearch}
+            />
+          </label>
+        </section>
+
         <section className="glass-card rounded-[24px] p-4 sm:p-6">
           <div className="space-y-3 md:hidden">
             {visibleStaffRows.map((staff) => {
               const statusMeta = statusStyles[staff.status]
 
               return (
-                <article className="rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]" key={staff.id}>
+                <article
+                  className="cursor-pointer rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] transition hover:bg-white/50"
+                  key={staff.id}
+                  onClick={() => openEmployeeDetail(staff)}
+                >
                   <div className="flex items-start justify-between gap-3">
-                    <ClickablePersonCell avatar={staff.avatar} name={staff.name} onClick={() => openEmployeeDetail(staff)} />
-                    <StatusPill className={statusMeta.className}>{statusMeta.label}</StatusPill>
+                    <div className="flex min-w-0 items-center gap-3">
+                      <img alt={staff.name} className="h-10 w-10 rounded-full object-cover shadow-sm" src={staff.avatar} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-slate-900">{staff.name}</p>
+                        <p className="mt-1 truncate text-xs text-slate-500">{staff.code}</p>
+                      </div>
+                    </div>
+                    <button
+                      aria-label={`Xóa nhân viên ${staff.name}`}
+                      className="motion-button flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600 hover:bg-red-100"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        setDeleteTarget(staff)
+                      }}
+                      type="button"
+                    >
+                      <Icon className="text-[18px]" name="delete" />
+                    </button>
                   </div>
+                  <div className="mt-4"><StatusPill className={statusMeta.className}>{statusMeta.label}</StatusPill></div>
                   <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Thông tin</p>
@@ -1792,12 +1835,6 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
                       <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Ca làm</p>
                       <p className="mt-1 text-slate-600">{staff.shift}</p>
                     </div>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between gap-3">
-                    <button className="motion-button text-sm font-semibold text-red-600 hover:text-red-700" onClick={() => setDeleteTarget(staff)} type="button">
-                      Xóa
-                    </button>
-                    <DetailButton onClick={() => openEmployeeDetail(staff)} />
                   </div>
                 </article>
               )
@@ -1821,9 +1858,19 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
                   const statusMeta = statusStyles[staff.status]
 
                   return (
-                    <tr className={index < visibleStaffRows.length - 1 ? 'border-b border-slate-900/12' : ''} key={staff.id}>
+                    <tr
+                      className={`${index < visibleStaffRows.length - 1 ? 'border-b border-slate-900/12' : ''} cursor-pointer transition hover:bg-white/38`}
+                      key={staff.id}
+                      onClick={() => openEmployeeDetail(staff)}
+                    >
                       <td className="px-4 py-4">
-                        <ClickablePersonCell avatar={staff.avatar} name={staff.name} onClick={() => openEmployeeDetail(staff)} />
+                        <div className="flex items-center gap-3 rounded-2xl px-2 py-1 text-left">
+                          <img alt={staff.name} className="h-10 w-10 rounded-full object-cover shadow-sm" src={staff.avatar} />
+                          <div className="min-w-0">
+                            <p className="whitespace-nowrap text-sm font-bold text-slate-900">{staff.name}</p>
+                            <p className="mt-1 text-xs text-slate-500">{staff.code}</p>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-4 text-sm text-slate-600">{staff.email}</td>
                       <td className="px-4 py-4">
@@ -1835,12 +1882,14 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
                         <div className="flex items-center justify-end gap-3">
                           <button
                             className="motion-button flex h-9 w-9 items-center justify-center rounded-2xl bg-red-50 text-red-600 hover:bg-red-100"
-                            onClick={() => setDeleteTarget(staff)}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              setDeleteTarget(staff)
+                            }}
                             type="button"
                           >
                             <Icon className="text-[18px]" name="delete" />
                           </button>
-                          <DetailButton onClick={() => openEmployeeDetail(staff)} />
                         </div>
                       </td>
                     </tr>
@@ -1850,13 +1899,20 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
             </table>
           </div>
 
+          {!visibleStaffRows.length ? (
+            <div className="rounded-[20px] px-5 py-10 text-center">
+              <p className="text-base font-semibold text-slate-900">Không tìm thấy nhân viên phù hợp</p>
+              <p className="mt-2 text-sm text-slate-600">Thử lại với tên, email, mã nhân viên hoặc ca làm khác.</p>
+            </div>
+          ) : null}
+
           <Pagination
             currentPage={staffPage}
             itemLabel="nhân viên"
             itemsPerPage={staffPerPage}
             onPageChange={setStaffPage}
-            totalItems={staffRows.length}
-            totalPages={Math.ceil(staffRows.length / staffPerPage)}
+            totalItems={filteredStaffRows.length}
+            totalPages={Math.ceil(filteredStaffRows.length / staffPerPage)}
           />
         </section>
 
