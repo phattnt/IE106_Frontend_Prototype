@@ -386,7 +386,7 @@ function AddEmployeeModal({
           <h2 className="text-[22px] font-bold text-slate-950">Thêm nhân viên mới</h2>
           <p className="mt-2 text-[15px] text-slate-500">Cung cấp thông tin chi tiết để tạo tài khoản nhân sự.</p>
         </div>
-        <button className="motion-button text-slate-400 hover:text-slate-700" onClick={onClose} type="button">
+        <button className="motion-button modal-close-button-inline" onClick={onClose} type="button">
           <Icon className="text-[26px]" name="close" />
         </button>
       </div>
@@ -394,12 +394,14 @@ function AddEmployeeModal({
       <form className="flex min-h-0 flex-col" onSubmit={onSubmit}>
         <div className="space-y-6 px-6 py-7 pb-10 sm:px-7 sm:pb-12">
           <label className="motion-button flex cursor-pointer flex-col items-center bg-white px-6 py-8 text-center">
-            <span className="relative flex h-28 w-28 items-center justify-center overflow-visible rounded-full border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400">
-              {form.avatar ? (
-                <img alt="Ảnh đại diện nhân viên mới" className="h-full w-full object-cover" src={form.avatar} />
-              ) : (
-                <Icon className="text-[42px]" name="person_add" />
-              )}
+            <span className="relative block h-28 w-28">
+              <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-50 text-slate-400">
+                {form.avatar ? (
+                  <img alt="Ảnh đại diện nhân viên mới" className="h-full w-full object-cover" src={form.avatar} />
+                ) : (
+                  <Icon className="text-[42px]" name="person_add" />
+                )}
+              </span>
               <span className="absolute bottom-0 right-0 z-10 flex h-10 w-10 translate-x-1 translate-y-1 items-center justify-center rounded-full border-4 border-white bg-blue-700 text-white shadow-[0_12px_22px_rgba(37,99,235,0.28)]">
                 <Icon className="text-[18px]" name="photo_camera" />
               </span>
@@ -549,7 +551,7 @@ function LeaveRequestModal({ canDecide = true, leave, onClose, onDecision }) {
   return (
     <ModalShell ariaLabel={`Chi tiết đơn nghỉ phép ${leave.code}`} maxWidth="max-w-[680px]" onClose={onClose}>
       <button
-        className="motion-button absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full text-slate-500 hover:text-slate-800"
+        className="motion-button modal-close-button"
         onClick={onClose}
         type="button"
       >
@@ -744,7 +746,7 @@ function CreateLeaveRequestModal({ onClose, onSubmit, showToast, staff }) {
           <h2 className="text-[22px] font-bold text-slate-950">Tạo đơn nghỉ phép</h2>
           <p className="mt-2 text-[15px] text-slate-500">{staff.name} · {staff.code}</p>
         </div>
-        <button className="motion-button text-slate-400 hover:text-slate-700" onClick={onClose} type="button">
+        <button className="motion-button modal-close-button-inline" onClick={onClose} type="button">
           <Icon className="text-[26px]" name="close" />
         </button>
       </div>

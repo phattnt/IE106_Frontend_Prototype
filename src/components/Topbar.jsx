@@ -63,8 +63,7 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
   const [showAllNotifications, setShowAllNotifications] = useState(false)
   const menuRef = useRef(null)
   const notificationRef = useRef(null)
-  const showPlanBadge = activePage === 'settings'
-  const planLabel = subscriptionTier.toUpperCase()
+  const planLabel = subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1)
   const visibleNotifications = showAllNotifications ? alertNotifications : alertNotifications.slice(0, 3)
 
   useEffect(() => {
@@ -174,11 +173,13 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
         <button className="motion-button hidden h-10 w-10 items-center justify-center rounded-full text-slate-600 transition hover:text-blue-700 sm:flex" type="button">
           <Icon name="help_outline" />
         </button>
-        {showPlanBadge ? (
-          <span className="hidden rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-blue-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] sm:inline-flex">
-            {planLabel}
-          </span>
-        ) : null}
+        <button
+          className="motion-button hidden h-10 items-center rounded-full bg-blue-50/80 px-4 text-xs font-bold text-blue-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] hover:bg-white sm:inline-flex"
+          onClick={() => onNavigate('settings', 'plans')}
+          type="button"
+        >
+          {planLabel}
+        </button>
         <div className="hidden h-8 w-px bg-slate-900/12 sm:block" />
 
         <div className="relative" ref={menuRef}>

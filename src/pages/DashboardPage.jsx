@@ -15,7 +15,7 @@ import { staffStatusStyles } from '../data/staffStatus.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip)
 
-const chartData = [
+const weeklyChartData = [
   { label: 'T2', value: 42 },
   { label: 'T3', value: 50 },
   { label: 'T4', value: 66 },
@@ -24,6 +24,52 @@ const chartData = [
   { label: 'T7', value: 34 },
   { label: 'CN', value: 43 },
 ]
+
+const monthlyChartData = [
+  { label: '01', value: 42 },
+  { label: '02', value: 45 },
+  { label: '03', value: 47 },
+  { label: '04', value: 50 },
+  { label: '05', value: 55 },
+  { label: '06', value: 60 },
+  { label: '07', value: 64 },
+  { label: '08', value: 66 },
+  { label: '09', value: 63 },
+  { label: '10', value: 57 },
+  { label: '11', value: 48 },
+  { label: '12', value: 39 },
+  { label: '13', value: 36 },
+  { label: '14', value: 43 },
+  { label: '15', value: 56 },
+  { label: '16', value: 66 },
+  { label: '17', value: 68 },
+  { label: '18', value: 63 },
+  { label: '19', value: 52 },
+  { label: '20', value: 39 },
+  { label: '21', value: 33 },
+  { label: '22', value: 34 },
+  { label: '23', value: 39 },
+  { label: '24', value: 45 },
+  { label: '25', value: 52 },
+  { label: '26', value: 58 },
+  { label: '27', value: 61 },
+  { label: '28', value: 55 },
+  { label: '29', value: 47 },
+  { label: '30', value: 43 },
+]
+
+const progressRangeOptions = {
+  week: {
+    data: weeklyChartData,
+    highlightIndex: 2,
+    label: 'Tuần',
+  },
+  month: {
+    data: monthlyChartData,
+    highlightIndex: 14,
+    label: '30 ngày',
+  },
+}
 
 const staffProfiles = {
   an: {
@@ -121,7 +167,10 @@ function drawRoundedRect(ctx, x, y, width, height, radius) {
   ctx.closePath()
 }
 
-function ProgressLineChart() {
+function ProgressLineChart({ range }) {
+  const activeRange = progressRangeOptions[range] ?? progressRangeOptions.month
+  const chartData = activeRange.data
+
   const progressChartData = useMemo(() => {
     return {
       labels: chartData.map((item) => item.label),
@@ -157,7 +206,7 @@ function ProgressLineChart() {
         },
       ],
     }
-  }, [])
+  }, [chartData])
 
   const progressChartOptions = useMemo(() => {
     return {
@@ -206,10 +255,18 @@ function ProgressLineChart() {
           },
           ticks: {
             color: '#0f172a',
+            callback: (_, index) => {
+              const day = chartData[index]?.label
+              if (range === 'week') {
+                return day
+              }
+              return ['01', '05', '10', '15', '20', '25', '30'].includes(day) ? `Ngày ${day}` : ''
+            },
             font: {
               size: 12,
               weight: 600,
             },
+            autoSkip: false,
             maxRotation: 0,
             padding: 10,
           },
@@ -221,13 +278,13 @@ function ProgressLineChart() {
         },
       },
     }
-  }, [])
+  }, [chartData, range])
 
   const highlightPlugin = useMemo(() => {
     return {
       id: 'dashboard-progress-highlight',
       afterDatasetsDraw(chart) {
-        const point = chart.getDatasetMeta(0).data[2]
+        const point = chart.getDatasetMeta(0).data[activeRange.highlightIndex]
 
         if (!point) {
           return
@@ -257,7 +314,7 @@ function ProgressLineChart() {
         ctx.restore()
       },
     }
-  }, [])
+  }, [activeRange.highlightIndex])
 
   return (
     <div className="relative h-[250px] w-full">
@@ -518,6 +575,9 @@ function ShiftDetailModal({ detail, onClose }) {
 
 export function DashboardPage({ onNavigate }) {
   const [selectedDetail, setSelectedDetail] = useState(null)
+  const [progressRange, setProgressRange] = useState('month')
+  const [rangeMenuOpen, setRangeMenuOpen] = useState(false)
+  const activeProgressRange = progressRangeOptions[progressRange] ?? progressRangeOptions.month
 
   return (
     <div className="dashboard-page page-scroll-pad space-y-6">
@@ -530,13 +590,38 @@ export function DashboardPage({ onNavigate }) {
               </span>
               <h1 className="text-[22px] font-semibold text-slate-950">Tiến độ đóng gói</h1>
             </div>
-            <button className="motion-button flex h-10 items-center gap-2 rounded-full bg-white/55 px-4 text-sm font-semibold text-slate-700 shadow-sm" type="button">
-              Tuần
-              <Icon name="expand_more" className="text-[20px]" />
-            </button>
+            <div className="relative">
+              <button
+                className="motion-button flex h-10 items-center gap-2 rounded-full bg-white/55 px-4 text-sm font-semibold text-slate-700 shadow-sm"
+                onClick={() => setRangeMenuOpen((current) => !current)}
+                type="button"
+              >
+                {activeProgressRange.label}
+                <Icon name="expand_more" className="text-[20px]" />
+              </button>
+              {rangeMenuOpen ? (
+                <div className="motion-dropdown absolute right-0 top-[calc(100%+10px)] z-20 w-36 overflow-hidden rounded-2xl border border-white/80 bg-white shadow-[0_18px_42px_rgba(15,23,42,0.16)]">
+                  {Object.entries(progressRangeOptions).map(([key, option]) => (
+                    <button
+                      className={`motion-button flex w-full px-4 py-3 text-left text-sm font-semibold transition ${
+                        progressRange === key ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50'
+                      }`}
+                      key={key}
+                      onClick={() => {
+                        setProgressRange(key)
+                        setRangeMenuOpen(false)
+                      }}
+                      type="button"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
 
-          <ProgressLineChart />
+          <ProgressLineChart range={progressRange} />
 
         </article>
 

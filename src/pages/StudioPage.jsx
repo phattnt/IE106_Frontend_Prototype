@@ -214,7 +214,7 @@ function SettingsModal({ settings, onChange, onClose, showToast }) {
       >
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-[20px] font-semibold text-slate-950">Cài đặt camera</h2>
-          <button className="motion-button h-9 w-9 rounded-full text-slate-500 hover:bg-slate-50" onClick={onClose} type="button">
+          <button className="motion-button modal-close-button-inline" onClick={onClose} type="button">
             <Icon name="close" />
           </button>
         </div>
@@ -284,7 +284,7 @@ function VideoProofModal({ onClose, record }) {
         onClick={(event) => event.stopPropagation()}
         role="dialog"
       >
-        <button className="motion-button absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-900/8 hover:text-slate-800" onClick={onClose} type="button">
+        <button className="motion-button modal-close-button" onClick={onClose} type="button">
           <Icon name="close" />
         </button>
 

@@ -27,8 +27,8 @@ function App() {
   })
   const [subscription, setSubscription] = useState({
     tier: 'pro',
-    daysRemaining: 18,
-    renewalDate: '07/06/2026',
+    daysRemaining: 78,
+    renewalDate: '06/08/2026',
   })
 
   const closeToast = useCallback((id) => {

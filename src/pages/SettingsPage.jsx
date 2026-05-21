@@ -16,7 +16,7 @@ const planCatalog = {
     price: '500k',
     suffix: '/tháng',
     storage: { limit: '100 GB', percent: 80, used: '80 GB' },
-    features: ['2000 video dung lượng cao', 'Lưu trữ dữ liệu trong 1 năm', 'AI hỗ trợ nhận diện nâng cao'],
+    features: ['2000 video', 'Lưu trữ 1 năm'],
   },
   master: {
     name: 'Master',
@@ -177,47 +177,47 @@ function PlanCard({ currentTier, planId, onSelect }) {
   const isUpgrade = currentTier === 'free' && (planId === 'pro' || planId === 'master')
   const isHigherUpgrade = currentTier === 'pro' && planId === 'master'
   const canAct = planId !== 'free' && planId !== 'business' && (isCurrent || isUpgrade || isHigherUpgrade)
+  const isBusiness = planId === 'business'
   const buttonLabel = isCurrent ? 'Gia hạn' : 'Nâng cấp'
 
   return (
     <article
-      className={`flex min-h-[330px] flex-col rounded-[22px] bg-[linear-gradient(180deg,rgba(196,216,247,0.9),rgba(207,223,248,0.76))] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] ${
-        isCurrent ? 'ring-2 ring-blue-600 shadow-[0_18px_40px_rgba(37,99,235,0.16)]' : ''
+      className={`relative flex min-h-[336px] flex-col overflow-hidden rounded-[22px] bg-[linear-gradient(180deg,rgba(207,224,248,0.94),rgba(213,228,250,0.84))] p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] ${
+        isCurrent ? 'ring-2 ring-blue-500 shadow-[0_18px_40px_rgba(37,99,235,0.16)]' : ''
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="text-[20px] font-bold text-slate-900">{plan.name}</h3>
-        {isCurrent ? (
-          <span className="rounded-full bg-blue-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-white">
-            Đang dùng
-          </span>
-        ) : null}
-      </div>
+      {isCurrent ? (
+        <span className="absolute right-0 top-0 rounded-bl-2xl bg-blue-600 px-7 py-3 text-[11px] font-bold uppercase tracking-[0.08em] text-white">
+          Hiện tại
+        </span>
+      ) : null}
+
+      <h3 className="text-[22px] font-bold text-slate-950">{plan.name}</h3>
 
       <div className="mt-5 flex items-end gap-1">
-        <span className="text-[32px] font-extrabold leading-none text-blue-700">{plan.price}</span>
-        {plan.suffix ? <span className="pb-1 text-xl text-slate-600">{plan.suffix}</span> : null}
+        <span className="text-[38px] font-extrabold leading-none text-blue-700">{plan.price}</span>
+        {plan.suffix ? <span className="pb-1 text-base font-medium text-slate-600">{plan.suffix}</span> : null}
       </div>
 
       <div className="mt-8 flex-1 space-y-4">
         {plan.features.map((feature) => (
           <div className="flex items-center gap-3 text-slate-700" key={feature}>
             <Icon className="text-[18px] text-blue-700" name="check" />
-            <span className="text-[15px]">{feature}</span>
+            <span className="text-base">{feature}</span>
           </div>
         ))}
       </div>
 
       <button
-        className={`mt-8 h-11 w-full rounded-2xl text-base font-medium transition ${
-          canAct
+        className={`mt-8 h-12 w-full rounded-2xl text-base font-semibold transition ${
+          canAct || isBusiness
             ? 'bg-blue-700 text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800'
             : 'bg-white/55 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]'
         }`}
         onClick={() => (canAct ? onSelect(planId, isCurrent ? 'renew' : 'upgrade') : null)}
         type="button"
       >
-        {planId === 'business' ? 'Liên hệ bán hàng' : canAct ? buttonLabel : 'Hiện tại'}
+        {planId === 'business' ? 'Nâng cấp' : canAct ? buttonLabel : 'Hiện tại'}
       </button>
     </article>
   )
@@ -321,7 +321,7 @@ function PaymentMethodRow({ checked, icon, label, onClick }) {
   )
 }
 
-function ModalShell({ children, onClose }) {
+function ModalShell({ children, maxWidth = 'max-w-[660px]', onClose }) {
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
 
@@ -347,13 +347,13 @@ function ModalShell({ children, onClose }) {
       role="presentation"
     >
       <div
-        className="motion-modal relative max-h-[90vh] w-full max-w-[660px] overflow-y-auto rounded-[28px] bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)] sm:p-8"
+        className={`motion-modal relative max-h-[90vh] w-full ${maxWidth} overflow-y-auto rounded-[28px] bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)] sm:p-8`}
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         <button
-          className="motion-button absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/75 text-slate-500 hover:text-slate-800"
+          className="motion-button modal-close-button"
           onClick={onClose}
           type="button"
         >
@@ -437,108 +437,138 @@ function ConfirmPlanModal({ action, method, onClose, onMethodChange, onNext, pla
   )
 }
 
-function PaymentDetailsModal({ method, onBack, onClose, onConfirm, planId }) {
+function PaymentDetailsModal({ action, method, onBack, onClose, onConfirm, planId }) {
   const plan = planCatalog[planId]
+  const methodLabel = paymentMethods.find((item) => item.id === method)?.label
+  const isRenew = action === 'renew'
+  const actionLabel = isRenew ? 'Gia hạn' : 'Nâng cấp'
 
   return (
-    <ModalShell onClose={onClose}>
-      <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
-          <Icon className="text-[24px]" name="payments" />
-        </div>
-        <div>
-          <h3 className="text-[22px] font-bold text-slate-950">Thông tin thanh toán</h3>
-          <p className="mt-1 text-sm text-slate-500">Hoàn tất bước cuối để kích hoạt gói {plan.name}.</p>
-        </div>
-      </div>
+    <ModalShell maxWidth="max-w-[920px]" onClose={onClose}>
+      <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
+        <aside className="flex flex-col">
+          <h3 className="text-[24px] font-bold leading-tight text-slate-950">{actionLabel} gói {plan.name}</h3>
+          <p className="mt-3 max-w-[280px] text-sm leading-6 text-slate-500">
+            {isRenew ? 'Duy trì quyền sử dụng và lưu trữ hiện tại cho doanh nghiệp của bạn.' : 'Mở khóa toàn bộ tiềm năng cho doanh nghiệp của bạn.'}
+          </p>
 
-      <div className="mt-6 rounded-[22px] bg-white/75 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]">
-        <div className="flex items-center justify-between gap-4 border-b border-slate-900/12 pb-4">
-          <div>
-            <p className="text-sm text-slate-500">Tổng thanh toán</p>
-            <p className="mt-1 text-[28px] font-extrabold text-blue-700">{plan.price}</p>
+          <div className="mt-7 space-y-4">
+            {plan.features.map((feature) => (
+              <div className="flex items-center gap-3 text-sm font-semibold text-slate-700" key={feature}>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-blue-700">
+                  <Icon className="text-[15px]" name="check" />
+                </span>
+                {feature}
+              </div>
+            ))}
           </div>
-          <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.08em] text-blue-700">
-            {paymentMethods.find((item) => item.id === method)?.label}
-          </div>
-        </div>
 
-        {method === 'card' ? (
-          <div className="mt-5 space-y-4">
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-600">Số thẻ</span>
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">4242 4242 4242 4242</div>
-            </label>
-            <div className="grid grid-cols-2 gap-4">
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-600">Ngày hết hạn</span>
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">08 / 28</div>
-              </label>
-              <label className="block">
-                <span className="mb-2 block text-sm font-medium text-slate-600">CVV</span>
-                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">•••</div>
-              </label>
+          <div className="mt-5 ">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">Chi phí gói {plan.name}</p>
+            <div className="mt-2 flex items-end gap-1">
+              <span className="text-[34px] font-extrabold leading-none text-blue-700">{plan.price}</span>
+              {plan.suffix ? <span className="pb-1 text-sm font-medium text-slate-700">{plan.suffix}</span> : null}
             </div>
+          </div>
+        </aside>
+
+        <section>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Thông tin thanh toán</p>
+
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-slate-600">Tên chủ thẻ</span>
-              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">Alex Rivera</div>
+              <span className="mb-2 block text-xs font-semibold text-slate-600">Họ và tên</span>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">Nguyễn Văn A</div>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-xs font-semibold text-slate-600">Email</span>
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">vana.nguyen@email.com</div>
             </label>
           </div>
-        ) : null}
 
-        {method === 'bank' ? (
-          <div className="mt-5 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Ngân hàng</p>
-                <p className="mt-2 text-sm font-semibold text-slate-800">ACB - Chi nhánh Quận 1</p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Số tài khoản</p>
-                <p className="mt-2 text-sm font-semibold text-slate-800">0520 8888 9999</p>
-              </div>
+          <div className="mt-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Chi tiết {methodLabel}</p>
+              <button className="text-xs font-semibold text-blue-700 transition hover:text-blue-800" onClick={onBack} type="button">
+                Đổi phương thức
+              </button>
             </div>
-            <div className="rounded-2xl border border-dashed border-blue-200 bg-blue-50/60 p-4 text-sm text-slate-700">
-              Nội dung chuyển khoản: <span className="font-bold text-blue-700">KURIFURI {plan.name.toUpperCase()} ALEX</span>
-            </div>
+
+            {method === 'card' ? (
+              <div className="space-y-4">
+                <label className="block">
+                  <span className="mb-2 block text-xs font-semibold text-slate-600">Số thẻ</span>
+                  <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
+                    <Icon className="text-[18px] text-slate-400" name="credit_card" />
+                    0000 0000 0000 0000
+                  </div>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className="block">
+                    <span className="mb-2 block text-xs font-semibold text-slate-600">Ngày hết hạn</span>
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400">MM/YY</div>
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-xs font-semibold text-slate-600">CVV</span>
+                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">•••</div>
+                  </label>
+                </div>
+                <label className="block">
+                  <span className="mb-2 block text-xs font-semibold text-slate-600">Tên chủ thẻ</span>
+                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm uppercase text-slate-500">NGUYEN VAN A</div>
+                </label>
+              </div>
+            ) : null}
+
+            {method === 'bank' ? (
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Ngân hàng</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-800">ACB - Chi nhánh Quận 1</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Số tài khoản</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-800">0520 8888 9999</p>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-dashed border-blue-200 bg-blue-50/60 p-4 text-sm text-slate-700">
+                  Nội dung chuyển khoản: <span className="font-bold text-blue-700">KURIFURI {plan.name.toUpperCase()} ALEX</span>
+                </div>
+              </div>
+            ) : null}
+
+            {method === 'wallet' ? (
+              <div className="grid gap-4 sm:grid-cols-[150px_1fr]">
+                <div className="flex aspect-square items-center justify-center rounded-[20px] border border-slate-200 bg-white">
+                  <div className="grid grid-cols-5 gap-1">
+                    {[...Array(25)].map((_, index) => (
+                      <span className={`h-4 w-4 ${index % 2 === 0 ? 'bg-slate-900' : 'bg-white'}`} key={index} />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col justify-center">
+                  <p className="text-sm leading-6 text-slate-600">Quét mã bằng Momo hoặc ZaloPay để tiếp tục.</p>
+                  <div className="mt-4 flex gap-2">
+                    <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-pink-600">Momo</span>
+                    <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-600">ZaloPay</span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
-        ) : null}
 
-        {method === 'wallet' ? (
-          <div className="mt-5 grid gap-4 sm:grid-cols-[160px_1fr]">
-            <div className="flex aspect-square items-center justify-center rounded-[20px] border border-slate-200 bg-white">
-              <div className="grid grid-cols-5 gap-1">
-                {[...Array(25)].map((_, index) => (
-                  <span className={`h-4 w-4 ${index % 2 === 0 ? 'bg-slate-900' : 'bg-white'}`} key={index} />
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-col justify-center">
-              <p className="text-sm text-slate-600">Quét mã bằng Momo hoặc ZaloPay để tiếp tục.</p>
-              <div className="mt-4 flex gap-2">
-                <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-pink-600">Momo</span>
-                <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-600">ZaloPay</span>
-              </div>
-            </div>
-          </div>
-        ) : null}
-      </div>
+          <button
+            className="mt-7 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-blue-700 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(37,99,235,0.24)] transition hover:bg-blue-800"
+            onClick={onConfirm}
+            type="button"
+          >
+            Xác nhận {isRenew ? 'gia hạn' : 'nâng cấp'}
+            <Icon className="text-[18px]" name="arrow_forward" />
+          </button>
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <button
-          className="h-11 flex-1 rounded-2xl bg-blue-100 text-sm font-semibold text-slate-700 transition hover:bg-blue-200/80"
-          onClick={onBack}
-          type="button"
-        >
-          Chọn lại phương thức
-        </button>
-        <button
-          className="h-11 flex-[1.25] rounded-2xl bg-blue-700 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(37,99,235,0.22)] transition hover:bg-blue-800"
-          onClick={onConfirm}
-          type="button"
-        >
-          Xác nhận thanh toán
-        </button>
+          <p className="mt-3 text-center text-[11px] text-slate-400">Giao dịch được bảo mật bởi mã hóa 256-bit SSL.</p>
+        </section>
       </div>
     </ModalShell>
   )
@@ -596,42 +626,29 @@ function PaymentSuccessModal({ onClose, planId }) {
 
 function SubscriptionStatusCard({ subscription }) {
   const currentPlan = planCatalog[subscription.tier]
-  const storage = currentPlan.storage
   const urgencyClass =
     subscription.daysRemaining <= 7
       ? 'bg-amber-50 text-amber-700'
       : 'bg-emerald-50 text-emerald-700'
 
   return (
-    <div className="mt-6 grid grid-cols-1 items-center gap-5 rounded-[24px] bg-white/45 p-4 lg:grid-cols-[0.95fr_1.2fr_0.85fr_1.25fr]">
+    <div className="mt-6 grid grid-cols-1 items-center gap-8 rounded-[30px] bg-white/55 px-7 py-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] lg:grid-cols-3">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Subscription hiện tại</p>
+        <p className="text-xs font-bold uppercase tracking-[0.08em] text-blue-700">Subscription hiện tại</p>
         <div className="mt-2 flex items-center gap-3">
-          <span className="text-[24px] font-bold leading-none text-slate-950">{currentPlan.name}</span>
+          <span className="text-[26px] font-bold leading-none text-slate-950">{currentPlan.name}</span>
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${urgencyClass}`}>
             Còn {subscription.daysRemaining} ngày
           </span>
         </div>
       </div>
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Lưu trữ gói hiện tại</p>
-        <div className="mt-2 flex items-baseline justify-between gap-3">
-          <p className="text-lg font-semibold leading-none text-slate-900">
-            {storage.used} <span className="text-sm font-medium text-slate-500">/ {storage.limit}</span>
-          </p>
-          <span className="text-sm font-semibold text-blue-700">{storage.percent}%</span>
-        </div>
-        <div className="mt-3 h-2 rounded-full bg-slate-200/80">
-          <div className="h-full rounded-full bg-blue-600" style={{ width: `${storage.percent}%` }} />
-        </div>
+        <p className="text-xs font-bold uppercase tracking-[0.08em] text-blue-700">Ngày hết hạn</p>
+        <p className="mt-2 text-[26px] font-bold leading-none text-slate-950">{subscription.renewalDate}</p>
       </div>
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Ngày hết hạn</p>
-        <p className="mt-2 text-lg font-semibold leading-none text-slate-900">{subscription.renewalDate}</p>
-      </div>
-      <div>
-        <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">Khuyến nghị</p>
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="text-xs font-bold uppercase tracking-[0.08em] text-blue-700">Khuyến nghị</p>
+        <p className="mt-2 max-w-[260px] text-base leading-6 text-slate-600">
           {subscription.daysRemaining <= 7 ? 'Nên gia hạn sớm để tránh gián đoạn lưu trữ.' : 'Gói của bạn đang hoạt động bình thường.'}
         </p>
       </div>
@@ -823,20 +840,20 @@ export function SettingsPage({
           </article>
         </section>
 
-        <section className="glass-card scroll-mt-28 rounded-[30px] p-6 lg:scroll-mt-32" ref={plansSectionRef}>
+        <section className="scroll-mt-28 rounded-[30px] lg:scroll-mt-32" ref={plansSectionRef}>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <Icon className="text-[23px] text-slate-900" name="workspace_premium" />
               <h2 className="text-[18px] font-bold text-slate-950">Gói dịch vụ</h2>
             </div>
             <div className="rounded-full bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-              Gói hiện tại: {planCatalog[subscription.tier].name} · {planCatalog[subscription.tier].storage.used}/{planCatalog[subscription.tier].storage.limit}
+              Gói hiện tại: {planCatalog[subscription.tier].name}
             </div>
           </div>
 
           <SubscriptionStatusCard subscription={subscription} />
 
-          <div className="mt-8 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 items-stretch gap-7 lg:grid-cols-3">
             {['pro', 'master', 'business'].map((planId) => (
               <PlanCard currentTier={subscription.tier} key={planId} onSelect={openCheckout} planId={planId} />
             ))}
@@ -890,6 +907,7 @@ export function SettingsPage({
 
       {checkoutState.open && checkoutState.step === 'details' ? (
         <PaymentDetailsModal
+          action={checkoutState.action}
           method={checkoutState.method}
           onBack={() => setCheckoutState((current) => ({ ...current, step: 'confirm' }))}
           onClose={closeCheckout}

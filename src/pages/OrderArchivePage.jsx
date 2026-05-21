@@ -114,7 +114,7 @@ function SummaryCard({ icon, label, value }) {
         <Icon className="text-[20px]" name={icon} />
         <span className="text-sm font-medium">{label}</span>
       </div>
-      <p className="text-[44px] font-bold leading-none text-slate-950">{value}</p>
+      <p className="text-[36px] font-bold leading-none text-slate-950">{value}</p>
     </article>
   )
 }
@@ -149,7 +149,7 @@ function ProductLine({ product }) {
     <div className="flex items-center gap-4 rounded-[20px] bg-white/45 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
       <img alt={product.name} className="h-16 w-16 rounded-2xl object-cover" src={product.imageUrl} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[18px] font-semibold text-slate-900">{product.name}</p>
+        <p className="truncate text-[15px] font-semibold text-slate-900">{product.name}</p>
         <p className="mt-1 text-sm text-slate-500">SKU: {product.sku}</p>
       </div>
       <span className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700">{product.quantity}</span>
@@ -169,13 +169,13 @@ function OrderProofModal({ onClose, order }) {
         aria-modal="true"
         aria-label={`Chi tiết video minh chứng đơn hàng ${order.code}`}
       >
-        <button className="motion-button absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-900/8 hover:text-slate-800" onClick={onClose} type="button">
+        <button className="motion-button modal-close-button" onClick={onClose} type="button">
           <Icon name="close" />
         </button>
 
         <div className="pr-10">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <h2 className="text-[26px] font-bold text-slate-950">Chi tiết video minh chứng - Đơn hàng #{order.code}</h2>
+            <h2 className="text-[24px] font-bold text-slate-950">Chi tiết video minh chứng - Đơn hàng #{order.code}</h2>
             <span className="w-fit rounded-full bg-emerald-100 px-4 py-1.5 text-sm font-bold uppercase tracking-[0.08em] text-emerald-700">Đã đóng gói</span>
           </div>
         </div>
@@ -188,7 +188,7 @@ function OrderProofModal({ onClose, order }) {
                 <div className="flex gap-4">
                   <div className="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-700">NV</div>
                   <div>
-                    <p className="text-[18px] font-bold text-slate-900">{order.customer}</p>
+                    <p className="text-[15px] font-bold text-slate-900">{order.customer}</p>
                     <div className="mt-2 space-y-1.5 text-slate-500">
                       <p className="flex items-center gap-2 text-sm">
                         <Icon className="text-[18px]" name="call" />
@@ -228,7 +228,7 @@ function OrderProofModal({ onClose, order }) {
                 {proofDetails.map((item) => (
                   <div className="rounded-[20px] bg-slate-50 p-4 ring-1 ring-slate-900/8" key={item.label}>
                     <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">{item.label}</p>
-                    <p className="mt-2 text-[18px] font-semibold text-slate-900">{item.value}</p>
+                    <p className="mt-2 text-[15px] font-semibold text-slate-900">{item.value}</p>
                   </div>
                 ))}
               </div>
@@ -260,7 +260,7 @@ function DeleteOrderModal({ onClose, onConfirm, order }) {
         aria-label={`Xác nhận xóa đơn hàng ${order.code}`}
       >
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-red-600">
-          <Icon className="filled text-[24px]" name="delete" />
+          <Icon className="filled text-[20px]" name="delete" />
         </div>
 
         <div className="mt-5 text-center">
@@ -274,7 +274,7 @@ function DeleteOrderModal({ onClose, onConfirm, order }) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-slate-500">Mã đơn hàng</p>
-              <p className="mt-2 text-[20px] font-bold text-blue-700">#{order.code}</p>
+              <p className="mt-2 text-[18px] font-bold text-blue-700">#{order.code}</p>
               <p className="mt-3 flex items-center gap-2 text-sm text-slate-500">
                 <Icon className="text-[18px]" name="calendar_today" />
                 {order.packedAt.split(' - ')[0]}
@@ -310,17 +310,17 @@ function QrScannerModal({ defaultOrderCode, onClose, onScanned }) {
         aria-modal="true"
         aria-label="Quét mã QR"
       >
-        <button className="motion-button absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 ring-1 ring-slate-900/8 hover:text-slate-800" onClick={onClose} type="button">
+        <button className="motion-button modal-close-button" onClick={onClose} type="button">
           <Icon name="close" />
         </button>
 
-        <h2 className="text-center text-[24px] font-bold text-slate-950">Quét mã QR</h2>
+        <h2 className="text-center text-[22px] font-bold text-slate-950">Quét mã QR</h2>
 
         <div className="mt-6 flex rounded-full bg-slate-100 p-1">
-          <button className={`motion-button h-12 flex-1 rounded-full text-lg font-semibold ${tab === 'camera' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'}`} onClick={() => setTab('camera')} type="button">
+          <button className={`motion-button h-12 flex-1 rounded-full text-sm font-semibold ${tab === 'camera' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'}`} onClick={() => setTab('camera')} type="button">
             Quét camera
           </button>
-          <button className={`motion-button h-12 flex-1 rounded-full text-lg font-semibold ${tab === 'manual' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'}`} onClick={() => setTab('manual')} type="button">
+          <button className={`motion-button h-12 flex-1 rounded-full text-sm font-semibold ${tab === 'manual' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600'}`} onClick={() => setTab('manual')} type="button">
             Nhập thủ công
           </button>
         </div>
@@ -434,8 +434,8 @@ export function OrderArchivePage({ showToast }) {
             <input className="w-full bg-transparent text-base text-slate-700 outline-none placeholder:text-slate-400" placeholder="Nhập mã đơn hàng..." type="text" />
           </label>
 
-          <button className="motion-button flex h-13 items-center justify-center gap-3 rounded-full bg-blue-700 px-7 text-lg font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800 xl:min-w-[156px]" onClick={() => setQrOpen(true)} type="button">
-            <Icon className="filled text-[24px]" name="qr_code_scanner" />
+          <button className="motion-button flex h-13 items-center justify-center gap-3 rounded-full bg-blue-700 px-7 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800 xl:min-w-[156px]" onClick={() => setQrOpen(true)} type="button">
+            <Icon className="filled text-[20px]" name="qr_code_scanner" />
             Quét QR
           </button>
         </section>
@@ -476,12 +476,12 @@ export function OrderArchivePage({ showToast }) {
                 }`}
                 key={`${row.code}-${index}`}
               >
-                <p className="text-[18px] font-medium text-slate-900">{row.code}</p>
-                <p className="text-[17px] text-slate-600">{row.packedAt}</p>
+                <p className="text-sm font-semibold text-slate-900">{row.code}</p>
+                <p className="text-sm text-slate-600">{row.packedAt}</p>
                 <div>
                   <PlatformBadge>{row.platform}</PlatformBadge>
                 </div>
-                <p className="text-[17px] text-slate-700">{row.customer}</p>
+                <p className="text-sm text-slate-700">{row.customer}</p>
                 <div className="flex justify-end gap-3">
                   <ActionButton icon="play_circle" onClick={() => openOrderVideo(row)} tone="primary" />
                   <ActionButton icon="delete" onClick={() => setDeleteOrder(row)} tone="danger" />
@@ -509,3 +509,4 @@ export function OrderArchivePage({ showToast }) {
     </>
   )
 }
+
