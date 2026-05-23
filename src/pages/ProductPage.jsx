@@ -430,7 +430,7 @@ export function ProductPage({ showToast }) {
             <div className="flex flex-wrap items-center gap-3">
               <DropdownSelect
                 align="right"
-                className="w-[128px]"
+                className="w-56 shrink-0"
                 menuWidth={224}
                 onChange={(value) => {
                   setSelectedCategory(value)

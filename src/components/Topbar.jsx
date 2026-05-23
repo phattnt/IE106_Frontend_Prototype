@@ -199,7 +199,7 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
             <div className="motion-dropdown absolute right-0 top-[calc(100%+16px)] z-[80] w-[320px] overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
               <div className="border-b border-slate-900/8 px-7 py-6">
                 <p className="text-[18px] font-bold text-slate-950">{profile.name}</p>
-                <p className="mt-1 text-sm uppercase tracking-[0.12em] text-slate-500">{profile.title}</p>
+                <p className="mt-1 text-sm uppercase tracking-[0.12em] text-slate-600">{profile.title}</p>
               </div>
 
               <div className="px-4 py-4">
@@ -210,7 +210,7 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
                     onClick={() => handleNavigate(item.id, item.target)}
                     type="button"
                   >
-                    <Icon className={item.id === 'settings' && item.label === 'Nâng cấp gói cước' ? 'text-blue-600' : 'text-slate-400'} name={item.icon} />
+                    <Icon className={item.id === 'settings' && item.label === 'Nâng cấp gói cước' ? 'text-blue-700' : 'text-slate-500'} name={item.icon} />
                     <span className="flex-1 text-[15px] font-semibold">{item.label}</span>
                     {item.badge ? (
                       <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">{item.badge}</span>
@@ -221,7 +221,7 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
 
               <div className="border-t border-slate-900/8 px-4 py-4">
                 <button className="motion-button flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left text-red-600 transition hover:bg-rose-50" type="button">
-                  <Icon className="text-red-600" name="logout" />
+                  <Icon className="text-red-700" name="logout" />
                   <span className="text-[15px] font-semibold">Đăng xuất</span>
                 </button>
               </div>

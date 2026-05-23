@@ -1,0 +1,159 @@
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]: package_2
+      - generic [ref=e8]:
+        - heading "Kurifuri" [level=1] [ref=e9]
+        - paragraph [ref=e10]: Enterprise Logistics
+    - navigation [ref=e11]:
+      - button "dashboard Tổng quan" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: dashboard
+        - text: Tổng quan
+      - button "videocam Phòng quay video" [ref=e14] [cursor=pointer]:
+        - generic [ref=e15]: videocam
+        - text: Phòng quay video
+      - button "receipt_long Đơn hàng" [ref=e16] [cursor=pointer]:
+        - generic [ref=e17]: receipt_long
+        - text: Đơn hàng
+      - button "groups Nhân viên" [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: groups
+        - text: Nhân viên
+      - button "inventory_2 Sản phẩm" [ref=e20] [cursor=pointer]:
+        - generic [ref=e21]: inventory_2
+        - text: Sản phẩm
+    - button "settings Cài đặt" [ref=e23] [cursor=pointer]:
+      - generic [ref=e24]: settings
+      - text: Cài đặt
+  - banner [ref=e25]:
+    - generic [ref=e26]:
+      - button "Mở thông báo" [ref=e28] [cursor=pointer]:
+        - generic [ref=e29]: notifications
+      - button "help_outline" [ref=e33] [cursor=pointer]:
+        - generic [ref=e34]: help_outline
+      - button "Pro" [ref=e35] [cursor=pointer]
+      - button "Alex Rivera Ops Manager User profile" [ref=e38] [cursor=pointer]:
+        - generic [ref=e39]:
+          - paragraph [ref=e40]: Alex Rivera
+          - paragraph [ref=e41]: Ops Manager
+        - img "User profile" [ref=e42]
+  - main [ref=e43]:
+    - generic [ref=e45]:
+      - generic [ref=e47]:
+        - generic [ref=e48]:
+          - heading "Lưu trữ đơn hàng" [level=1] [ref=e49]
+          - paragraph [ref=e50]: Tra cứu và quản lý video đóng gói theo mã đơn.
+        - generic [ref=e51]:
+          - button "Tất cả" [ref=e52] [cursor=pointer]
+          - button "Shopee" [ref=e53] [cursor=pointer]
+          - button "TikTok" [ref=e54] [cursor=pointer]
+          - button "Lazada" [ref=e55] [cursor=pointer]
+      - generic [ref=e56]:
+        - article [ref=e57]:
+          - generic [ref=e58]:
+            - generic [ref=e59]: inventory_2
+            - generic [ref=e60]: Tổng đơn hàng
+          - paragraph [ref=e61]: 12,458
+        - article [ref=e62]:
+          - generic [ref=e63]:
+            - generic [ref=e64]: video_library
+            - generic [ref=e65]: Video đã lưu
+          - paragraph [ref=e66]: 12,458
+        - article [ref=e67]:
+          - generic [ref=e68]:
+            - generic [ref=e69]: verified_user
+            - generic [ref=e70]: Khiếu nại đã giải quyết
+          - paragraph [ref=e71]: "142"
+      - generic [ref=e72]:
+        - textbox [ref=e74]:
+          - /placeholder: Nhập mã đơn hàng...
+        - button "qr_code_scanner Quét QR" [ref=e75] [cursor=pointer]:
+          - generic [ref=e76]: qr_code_scanner
+          - text: Quét QR
+      - generic [ref=e77]:
+        - generic [ref=e78]:
+          - generic [ref=e79]: Mã đơn hàng
+          - generic [ref=e80]: Ngày đóng gói
+          - generic [ref=e81]: Nền tảng
+          - generic [ref=e82]: Khách hàng
+          - generic [ref=e83]: Thao tác
+        - generic [ref=e84]:
+          - generic [ref=e85]:
+            - paragraph [ref=e86]: SH-89237492A
+            - paragraph [ref=e87]: 14/05/2024 - 10:32 AM
+            - generic [ref=e89]: Shopee
+            - paragraph [ref=e90]: Nguyễn Văn An
+            - generic [ref=e91]:
+              - button "play_circle" [ref=e92] [cursor=pointer]:
+                - generic [ref=e93]: play_circle
+              - button "delete" [ref=e94] [cursor=pointer]:
+                - generic [ref=e95]: delete
+          - generic [ref=e96]:
+            - paragraph [ref=e97]: TI-89237499B
+            - paragraph [ref=e98]: 14/05/2024 - 09:15 AM
+            - generic [ref=e100]: TikTok
+            - paragraph [ref=e101]: Trần Thị B
+            - generic [ref=e102]:
+              - button "play_circle" [ref=e103] [cursor=pointer]:
+                - generic [ref=e104]: play_circle
+              - button "delete" [ref=e105] [cursor=pointer]:
+                - generic [ref=e106]: delete
+          - generic [ref=e107]:
+            - paragraph [ref=e108]: LA-89237506C
+            - paragraph [ref=e109]: 13/05/2024 - 16:45 PM
+            - generic [ref=e111]: Lazada
+            - paragraph [ref=e112]: Lê Văn C
+            - generic [ref=e113]:
+              - button "play_circle" [ref=e114] [cursor=pointer]:
+                - generic [ref=e115]: play_circle
+              - button "delete" [ref=e116] [cursor=pointer]:
+                - generic [ref=e117]: delete
+          - generic [ref=e118]:
+            - paragraph [ref=e119]: LA-89237513D
+            - paragraph [ref=e120]: 13/05/2024 - 14:10 PM
+            - generic [ref=e122]: Lazada
+            - paragraph [ref=e123]: Phạm Minh D
+            - generic [ref=e124]:
+              - button "play_circle" [ref=e125] [cursor=pointer]:
+                - generic [ref=e126]: play_circle
+              - button "delete" [ref=e127] [cursor=pointer]:
+                - generic [ref=e128]: delete
+          - generic [ref=e129]:
+            - paragraph [ref=e130]: SH-89237520E
+            - paragraph [ref=e131]: 12/05/2024 - 17:20 PM
+            - generic [ref=e133]: Shopee
+            - paragraph [ref=e134]: Hoàng Thị E
+            - generic [ref=e135]:
+              - button "play_circle" [ref=e136] [cursor=pointer]:
+                - generic [ref=e137]: play_circle
+              - button "delete" [ref=e138] [cursor=pointer]:
+                - generic [ref=e139]: delete
+          - generic [ref=e140]:
+            - paragraph [ref=e141]: TI-89237527F
+            - paragraph [ref=e142]: 12/05/2024 - 11:05 AM
+            - generic [ref=e144]: TikTok
+            - paragraph [ref=e145]: Ngô Văn F
+            - generic [ref=e146]:
+              - button "play_circle" [ref=e147] [cursor=pointer]:
+                - generic [ref=e148]: play_circle
+              - button "delete" [ref=e149] [cursor=pointer]:
+                - generic [ref=e150]: delete
+        - generic [ref=e152]:
+          - paragraph [ref=e153]: Hiển thị 1-6 trong số 20 đơn hàng
+          - generic [ref=e154]:
+            - generic [ref=e155]:
+              - button "keyboard_double_arrow_left" [disabled] [ref=e156]:
+                - generic [ref=e157]: keyboard_double_arrow_left
+              - button "chevron_left" [disabled] [ref=e158]:
+                - generic [ref=e159]: chevron_left
+              - button "1" [ref=e160] [cursor=pointer]
+              - button "2" [ref=e161] [cursor=pointer]
+              - button "3" [ref=e162] [cursor=pointer]
+              - button "4" [ref=e163] [cursor=pointer]
+              - button "chevron_right" [ref=e164] [cursor=pointer]:
+                - generic [ref=e165]: chevron_right
+              - button "keyboard_double_arrow_right" [ref=e166] [cursor=pointer]:
+                - generic [ref=e167]: keyboard_double_arrow_right
+            - generic [ref=e168]:
+              - generic [ref=e169]: Đến trang
+              - textbox [ref=e170]: "1"
+              - button "Đi" [ref=e171] [cursor=pointer]

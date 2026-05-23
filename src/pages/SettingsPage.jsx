@@ -79,7 +79,7 @@ function getSourceBadge(status) {
   if (status === 'available') {
     return 'bg-emerald-100 text-emerald-700'
   }
-  return 'bg-rose-100 text-rose-500'
+  return 'border border-rose-200 bg-rose-50 text-rose-700'
 }
 
 function getSourceStatusLabel(status) {
@@ -118,14 +118,6 @@ function Toggle({ enabled, onChange }) {
 function CameraSourceSelect({ currentSource, onSelect }) {
   return (
     <DropdownSelect
-      footer={
-        <div className="flex items-center justify-between border-t border-slate-900/12 px-4 py-3">
-          <span className="text-sm text-slate-400">Không thấy thiết bị?</span>
-          <button className="text-sm font-semibold text-blue-700 transition hover:text-blue-800" type="button">
-            Quét lại
-          </button>
-        </div>
-      }
       getOptionMeta={(option) => (
         <span className={`rounded-xl px-3 py-1 text-xs font-semibold ${getSourceBadge(option.source.status)}`}>
           {getSourceStatusLabel(option.source.status)}

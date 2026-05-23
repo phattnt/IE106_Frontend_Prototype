@@ -151,7 +151,7 @@ export function DropdownSelect({
                 <button
                   className={`flex min-h-10 w-full items-center gap-3 px-5 py-3 text-left text-[15px] transition ${
                     active ? tone.activeOption : tone.hoverOption
-                  } ${option.disabled ? 'cursor-not-allowed opacity-55' : ''}`}
+                  } ${option.disabled ? 'cursor-not-allowed' : ''}`}
                   disabled={option.disabled}
                   key={option.value}
                   onClick={() => {
@@ -160,7 +160,7 @@ export function DropdownSelect({
                   }}
                   type="button"
                 >
-                  <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                  <span className={`min-w-0 flex-1 truncate ${option.disabled ? 'text-slate-500' : ''}`}>{option.label}</span>
                   {meta ? <span className="shrink-0">{meta}</span> : null}
                   {active ? <Icon className={`text-[18px] ${tone.check}`} name="check" /> : null}
                 </button>
