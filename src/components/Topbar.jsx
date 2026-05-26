@@ -112,7 +112,7 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
   }
 
   return (
-    <header className="dashboard-topbar glass-panel fixed left-4 right-4 top-4 z-40 flex min-h-16 items-center justify-between rounded-3xl px-4 py-3 lg:left-80 lg:right-6 lg:top-5 lg:justify-end lg:rounded-full lg:px-8">
+    <header className="dashboard-topbar glass-panel mb-6 flex min-h-16 items-center justify-between rounded-3xl px-4 py-3 lg:justify-end lg:rounded-full lg:px-8">
       <div className="flex items-center gap-3 lg:hidden">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-700 text-white">
           <Icon className="filled" name="package_2" />

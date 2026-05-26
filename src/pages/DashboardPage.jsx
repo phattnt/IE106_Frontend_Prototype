@@ -16,46 +16,46 @@ import { staffStatusStyles } from '../data/staffStatus.js'
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip)
 
 const weeklyChartData = [
-  { label: 'T2', value: 42 },
-  { label: 'T3', value: 50 },
-  { label: 'T4', value: 66 },
-  { label: 'T5', value: 39 },
-  { label: 'T6', value: 68 },
-  { label: 'T7', value: 34 },
-  { label: 'CN', value: 43 },
+  { label: 'T2', value: 420 },
+  { label: 'T3', value: 508 },
+  { label: 'T4', value: 664 },
+  { label: 'T5', value: 392 },
+  { label: 'T6', value: 688 },
+  { label: 'T7', value: 346 },
+  { label: 'CN', value: 438 },
 ]
 
 const monthlyChartData = [
-  { label: '01', value: 42 },
-  { label: '02', value: 45 },
-  { label: '03', value: 47 },
-  { label: '04', value: 50 },
-  { label: '05', value: 55 },
-  { label: '06', value: 60 },
-  { label: '07', value: 64 },
-  { label: '08', value: 66 },
-  { label: '09', value: 63 },
-  { label: '10', value: 57 },
-  { label: '11', value: 48 },
-  { label: '12', value: 39 },
-  { label: '13', value: 36 },
-  { label: '14', value: 43 },
-  { label: '15', value: 56 },
-  { label: '16', value: 66 },
-  { label: '17', value: 68 },
-  { label: '18', value: 63 },
-  { label: '19', value: 52 },
-  { label: '20', value: 39 },
-  { label: '21', value: 33 },
-  { label: '22', value: 34 },
-  { label: '23', value: 39 },
-  { label: '24', value: 45 },
-  { label: '25', value: 52 },
-  { label: '26', value: 58 },
-  { label: '27', value: 61 },
-  { label: '28', value: 55 },
-  { label: '29', value: 47 },
-  { label: '30', value: 43 },
+  { label: '01', value: 1420 },
+  { label: '02', value: 1518 },
+  { label: '03', value: 1644 },
+  { label: '04', value: 1712 },
+  { label: '05', value: 1886 },
+  { label: '06', value: 2054 },
+  { label: '07', value: 2180 },
+  { label: '08', value: 2268 },
+  { label: '09', value: 2136 },
+  { label: '10', value: 1942 },
+  { label: '11', value: 1660 },
+  { label: '12', value: 1374 },
+  { label: '13', value: 1288 },
+  { label: '14', value: 1486 },
+  { label: '15', value: 2504 },
+  { label: '16', value: 2260 },
+  { label: '17', value: 2328 },
+  { label: '18', value: 2148 },
+  { label: '19', value: 1782 },
+  { label: '20', value: 1388 },
+  { label: '21', value: 1168 },
+  { label: '22', value: 1214 },
+  { label: '23', value: 1376 },
+  { label: '24', value: 1540 },
+  { label: '25', value: 1798 },
+  { label: '26', value: 1984 },
+  { label: '27', value: 2096 },
+  { label: '28', value: 1872 },
+  { label: '29', value: 1608 },
+  { label: '30', value: 1466 },
 ]
 
 const progressRangeOptions = {
@@ -153,19 +153,7 @@ const scheduleCells = {
   'full-day-t6': ['cuong'],
 }
 
-function drawRoundedRect(ctx, x, y, width, height, radius) {
-  ctx.beginPath()
-  ctx.moveTo(x + radius, y)
-  ctx.lineTo(x + width - radius, y)
-  ctx.quadraticCurveTo(x + width, y, x + width, y + radius)
-  ctx.lineTo(x + width, y + height - radius)
-  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
-  ctx.lineTo(x + radius, y + height)
-  ctx.quadraticCurveTo(x, y + height, x, y + height - radius)
-  ctx.lineTo(x, y + radius)
-  ctx.quadraticCurveTo(x, y, x + radius, y)
-  ctx.closePath()
-}
+const formatOrderCount = (value) => `${new Intl.NumberFormat('vi-VN').format(value)} đơn`
 
 function ProgressLineChart({ range }) {
   const activeRange = progressRangeOptions[range] ?? progressRangeOptions.month
@@ -232,16 +220,30 @@ function ProgressLineChart({ range }) {
           display: false,
         },
         tooltip: {
-          backgroundColor: '#0f172a',
-          bodyColor: '#ffffff',
-          borderColor: 'rgba(255,255,255,0.14)',
+          backgroundColor: 'rgba(255,255,255,0.96)',
+          bodyColor: '#0f172a',
+          borderColor: 'rgba(37,99,235,0.14)',
           borderWidth: 1,
-          cornerRadius: 14,
+          caretPadding: 10,
+          caretSize: 7,
+          cornerRadius: 18,
           displayColors: false,
-          padding: 12,
-          titleColor: '#cbd5e1',
+          padding: 14,
+          titleColor: '#2563eb',
+          titleFont: {
+            size: 12,
+            weight: 700,
+          },
+          bodyFont: {
+            size: 14,
+            weight: 800,
+          },
           callbacks: {
-            label: (context) => `${context.parsed.y}% tiến độ`,
+            title: (items) => {
+              const label = items[0]?.label ?? ''
+              return range === 'week' ? label : `Ngày ${label}`
+            },
+            label: (context) => formatOrderCount(context.parsed.y),
           },
         },
       },
@@ -273,52 +275,16 @@ function ProgressLineChart({ range }) {
         },
         y: {
           display: false,
-          suggestedMax: 78,
-          suggestedMin: 24,
+          suggestedMax: Math.max(...chartData.map((item) => item.value)) + (range === 'week' ? 120 : 360),
+          suggestedMin: Math.max(0, Math.min(...chartData.map((item) => item.value)) - (range === 'week' ? 120 : 360)),
         },
       },
     }
   }, [chartData, range])
 
-  const highlightPlugin = useMemo(() => {
-    return {
-      id: 'dashboard-progress-highlight',
-      afterDatasetsDraw(chart) {
-        const point = chart.getDatasetMeta(0).data[activeRange.highlightIndex]
-
-        if (!point) {
-          return
-        }
-
-        const { x, y } = point.getProps(['x', 'y'], true)
-        const ctx = chart.ctx
-        const text = '2.5k'
-        const boxHeight = 26
-        const boxPaddingX = 11
-
-        ctx.save()
-        ctx.font = '700 12px Inter, sans-serif'
-        const boxWidth = Math.ceil(ctx.measureText(text).width + boxPaddingX * 2)
-        const boxX = x - boxWidth / 2
-        const boxY = y - 42
-        ctx.shadowBlur = 14
-        ctx.shadowColor = 'rgba(15, 42, 115, 0.22)'
-        ctx.fillStyle = '#102a73'
-        drawRoundedRect(ctx, boxX, boxY, boxWidth, boxHeight, 7)
-        ctx.fill()
-        ctx.shadowBlur = 0
-        ctx.fillStyle = '#ffffff'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(text, x, boxY + boxHeight / 2 + 0.5)
-        ctx.restore()
-      },
-    }
-  }, [activeRange.highlightIndex])
-
   return (
     <div className="relative h-[250px] w-full">
-      <Line data={progressChartData} options={progressChartOptions} plugins={[highlightPlugin]} />
+      <Line data={progressChartData} options={progressChartOptions} />
     </div>
   )
 }

@@ -227,10 +227,10 @@ function App() {
   return (
     <div className="dashboard-shell min-h-screen text-slate-950">
       <Sidebar activePage={activePage} onNavigate={handleNavigate} />
-      <Topbar onLogout={handleLogout} onNavigate={handleNavigate} profile={profile} subscriptionTier={subscription.tier} />
       <AppToastContainer onClose={closeToast} toasts={toasts} />
 
-      <main className="dashboard-main box-border min-h-screen p-4 pt-[118px] lg:ml-80 lg:mr-6 lg:w-[calc(100%-20rem-1.5rem)] lg:px-0 lg:pb-0 lg:pt-[116px]">
+      <main className="dashboard-main box-border min-h-screen p-4 lg:ml-80 lg:mr-6 lg:w-[calc(100%-20rem-1.5rem)] lg:px-0 lg:pb-0 lg:pt-5">
+        <Topbar onLogout={handleLogout} onNavigate={handleNavigate} profile={profile} subscriptionTier={subscription.tier} />
         <div className="page-transition" key={activePage}>
           {renderedPages[activePage]}
         </div>

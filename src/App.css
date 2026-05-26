@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 
 .dashboard-shell {
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background:
     radial-gradient(circle at 18% 10%, rgba(255, 255, 255, 0.24), transparent 22rem),
     radial-gradient(circle at 68% 24%, rgba(226, 240, 255, 0.22), transparent 26rem),
@@ -720,9 +720,6 @@
   }
 
   .dashboard-topbar {
-    left: 272px !important;
-    right: 16px !important;
-    top: 16px !important;
     min-height: 60px !important;
     padding: 10px 22px !important;
   }
@@ -731,7 +728,7 @@
     margin-left: 272px !important;
     margin-right: 16px !important;
     width: calc(100% - 17rem - 1rem) !important;
-    padding-top: 96px !important;
+    padding-top: 16px !important;
   }
 
   .product-page > .glass-panel:first-child h1,
@@ -807,10 +804,6 @@
   .dashboard-sidebar {
     width: 216px !important;
     padding: 18px !important;
-  }
-
-  .dashboard-topbar {
-    left: 248px !important;
   }
 
   .dashboard-main {
