@@ -57,7 +57,7 @@ const alertToneClass = {
   rose: 'bg-rose-100 text-rose-700',
 }
 
-export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'free' }) {
+export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free' }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [showAllNotifications, setShowAllNotifications] = useState(false)
@@ -98,6 +98,11 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
   function handleNavigate(page, target) {
     onNavigate(page, target)
     setMenuOpen(false)
+  }
+
+  function handleLogout() {
+    setMenuOpen(false)
+    onLogout?.()
   }
 
   function toggleNotifications() {
@@ -220,7 +225,7 @@ export function Topbar({ activePage, onNavigate, profile, subscriptionTier = 'fr
               </div>
 
               <div className="border-t border-slate-900/8 px-4 py-4">
-                <button className="motion-button flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left text-red-600 transition hover:bg-rose-50" type="button">
+                <button className="motion-button flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left text-red-600 transition hover:bg-rose-50" onClick={handleLogout} type="button">
                   <Icon className="text-red-700" name="logout" />
                   <span className="text-[15px] font-semibold">Đăng xuất</span>
                 </button>
