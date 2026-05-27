@@ -112,7 +112,7 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
   }
 
   return (
-    <header className="dashboard-topbar glass-panel mb-6 flex min-h-16 items-center justify-between rounded-3xl px-4 py-3 lg:justify-end lg:rounded-full lg:px-8">
+    <header className="dashboard-topbar glass-panel relative z-[90] mb-6 flex min-h-16 items-center justify-between rounded-3xl px-4 py-3 lg:justify-end lg:rounded-full lg:px-8">
       <div className="flex items-center gap-3 lg:hidden">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-700 text-white">
           <Icon className="filled" name="package_2" />
@@ -129,8 +129,8 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
             aria-label="Mở thông báo"
             className={`motion-button relative flex h-11 w-11 items-center justify-center rounded-full border transition ${
               notificationOpen
-                ? 'border-blue-200 bg-white text-blue-700 shadow-[0_12px_28px_rgba(37,99,235,0.18)]'
-                : 'border-transparent bg-white/35 text-slate-600 hover:border-white/80 hover:bg-white/72 hover:text-blue-700 hover:shadow-[0_12px_28px_rgba(42,76,130,0.12)]'
+                ? 'border-white/80 bg-white/45 text-blue-700 shadow-[0_12px_28px_rgba(37,99,235,0.14)]'
+                : 'border-transparent bg-transparent text-slate-600 hover:border-white/70 hover:bg-white/45 hover:text-blue-700 hover:shadow-[0_12px_28px_rgba(42,76,130,0.10)]'
             }`}
             onClick={toggleNotifications}
             type="button"
@@ -143,7 +143,7 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
           </button>
 
           {notificationOpen ? (
-            <div className="motion-dropdown fixed left-4 right-4 top-[112px] z-[140] max-h-[calc(100vh-132px)] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:left-auto sm:w-[420px] lg:right-6 lg:top-[116px]">
+            <div className="motion-dropdown fixed left-4 right-4 top-[88px] z-[220] max-h-[calc(100vh-108px)] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_28px_70px_rgba(15,23,42,0.24)] sm:left-auto sm:w-[420px] lg:right-6 lg:top-[96px]">
               <div className="px-6 py-5">
                 <h2 className="text-[18px] font-semibold text-slate-950">Thông báo cảnh báo</h2>
               </div>
@@ -201,7 +201,7 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
           </button>
 
           {menuOpen ? (
-            <div className="motion-dropdown absolute right-0 top-[calc(100%+16px)] z-[80] w-[320px] overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+            <div className="motion-dropdown absolute right-0 top-[calc(100%+16px)] z-[220] w-[320px] overflow-hidden rounded-[28px] border border-white/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
               <div className="border-b border-slate-900/8 px-7 py-6">
                 <p className="text-[18px] font-bold text-slate-950">{profile.name}</p>
                 <p className="mt-1 text-sm uppercase tracking-[0.12em] text-slate-600">{profile.title}</p>

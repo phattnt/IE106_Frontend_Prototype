@@ -46,7 +46,7 @@ function buildWorkloadSeries(seed, length, min = 34, max = 82) {
 }
 
 function buildPerformanceProfile(seed) {
-  const workload = buildWorkloadSeries(seed, 14, 38, 84)
+  const workload = buildWorkloadSeries(seed, 30, 38, 84)
   const previousWorkload = buildWorkloadSeries(seed + 40, 30, 32, 86)
   const ordersPerHour = randomInt(seed * 7 + 2, 28, 48)
   const accuracyValue = (97.2 + createSeededValue(seed * 11 + 3) * 2.6).toFixed(1)
@@ -280,7 +280,7 @@ function ModalShell({ ariaLabel, children, maxWidth = 'max-w-[720px]', onClose }
 
   return createPortal(
     <div
-      className="motion-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/28 px-4 py-8 backdrop-blur-md"
+      className="motion-overlay fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/42 px-4 py-8 backdrop-blur-md"
       onClick={onClose}
       role="presentation"
     >
@@ -870,7 +870,7 @@ function EmployeeDetailPage({
   const detailInputClass =
     'mt-3 h-11 w-full rounded-2xl border border-white/70 bg-white/65 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)] outline-none transition focus:border-slate-900/70 focus:bg-white focus:ring-2 focus:ring-slate-900/8'
   const detailStaticFieldClass =
-    'mt-3 flex h-11 items-center rounded-2xl border border-white/70 bg-white/65 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)]'
+    'mt-3 flex h-11 items-center gap-3 rounded-2xl border border-white/70 bg-white/65 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)]'
   const performanceChartData = {
     labels: chartLabels,
     datasets: [
@@ -1128,22 +1128,20 @@ function EmployeeDetailPage({
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ngày gia nhập</p>
             <div className={detailStaticFieldClass}>
-              <div className="flex w-full items-center gap-3">
-                <Icon className="text-[18px] text-slate-400" name="calendar_today" />
-                <input
-                  className="w-full bg-transparent text-sm font-semibold text-slate-700 outline-none"
-                  onChange={(event) => updateDraft('joinedAt', event.target.value)}
-                  type="text"
-                  value={draft.joinedAt}
-                />
-              </div>
+              <Icon className="shrink-0 text-[18px] text-slate-400" name="calendar_today" />
+              <input
+                className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-700 outline-none"
+                onChange={(event) => updateDraft('joinedAt', event.target.value)}
+                type="text"
+                value={draft.joinedAt}
+              />
             </div>
           </div>
           <div>
             <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Mã nhân viên</p>
             <div className={detailStaticFieldClass}>
-              <Icon className="text-[18px] text-slate-400" name="badge" />
-              {draft.code}
+              <Icon className="shrink-0 text-[18px] text-slate-400" name="badge" />
+              <span className="min-w-0 truncate">{draft.code}</span>
             </div>
           </div>
         </div>

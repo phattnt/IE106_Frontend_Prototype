@@ -43,7 +43,7 @@ const paymentMethods = [
 const paymentHistory = [
   { code: 'INV-0520-001', type: 'Gia hạn Pro', amount: '500k', status: 'Đã thanh toán', date: '20/05/2026 - 14:42' },
   { code: 'INV-0420-014', type: 'Nâng cấp Free -> Pro', amount: '500k', status: 'Đã thanh toán', date: '20/04/2026 - 09:18' },
-  { code: 'INV-0320-009', type: 'Bổ sung lưu trữ', amount: '150k', status: 'Hoàn tất', date: '20/03/2026 - 16:05' },
+  { code: 'INV-0320-009', type: 'Bổ sung lưu trữ', amount: '150k', status: 'Đã thanh toán', date: '20/03/2026 - 16:05' },
 ]
 
 const cameraSources = [
@@ -334,7 +334,7 @@ function ModalShell({ children, maxWidth = 'max-w-[660px]', onClose }) {
 
   return createPortal(
     <div
-      className="motion-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/35 px-4 py-10 backdrop-blur-[2px]"
+      className="motion-overlay fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/42 px-4 py-10 backdrop-blur-[2px]"
       onClick={onClose}
       role="presentation"
     >
@@ -496,14 +496,20 @@ function PaymentDetailsModal({ action, method, onBack, onClose, onConfirm, planI
                   </div>
                 </label>
                 <div className="grid grid-cols-2 gap-4">
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-semibold text-slate-600">Ngày hết hạn</span>
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-400">MM/YY</div>
-                  </label>
-                  <label className="block">
-                    <span className="mb-2 block text-xs font-semibold text-slate-600">CVV</span>
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">•••</div>
-                  </label>
+                  <button className="motion-button rounded-[22px] bg-[linear-gradient(135deg,#102a7a,#2563eb_55%,#7dd3fc)] p-4 text-left text-white shadow-[0_18px_36px_rgba(37,99,235,0.24)]" type="button">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-100">Visa</span>
+                    <span className="mt-5 block font-mono text-sm font-bold tracking-[0.18em]">4242 •••• •••• 4242</span>
+                    <span className="mt-3 block text-xs font-semibold text-blue-50">NGUYEN VAN A • 08/28</span>
+                  </button>
+                  <button className="motion-button rounded-[22px] bg-[linear-gradient(135deg,#111827,#334155_58%,#f59e0b)] p-4 text-left text-white shadow-[0_18px_36px_rgba(15,23,42,0.24)]" type="button">
+                    <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-100">
+                      <span className="h-4 w-4 rounded-full bg-red-500/90" />
+                      <span className="-ml-3 h-4 w-4 rounded-full bg-amber-400/90" />
+                      Mastercard
+                    </span>
+                    <span className="mt-5 block font-mono text-sm font-bold tracking-[0.18em]">5555 •••• •••• 4444</span>
+                    <span className="mt-3 block text-xs font-semibold text-amber-50">TRAN MINH K • 11/29</span>
+                  </button>
                 </div>
                 <label className="block">
                   <span className="mb-2 block text-xs font-semibold text-slate-600">Tên chủ thẻ</span>
@@ -800,7 +806,7 @@ export function SettingsPage({
                 <span className="text-base text-slate-700">Giới hạn dung lượng</span>
                 <span className="text-xl font-bold text-blue-700">80%</span>
               </div>
-              <div className="h-1.5 rounded-full bg-slate-200/80">
+              <div className="h-2 overflow-hidden rounded-full bg-slate-300/95 ring-1 ring-slate-400/35">
                 <div className="h-full w-4/5 rounded-full bg-blue-600" />
               </div>
             </div>

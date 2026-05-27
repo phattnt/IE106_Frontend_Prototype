@@ -8,6 +8,9 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
     remember: true,
   })
   const [localError, setLocalError] = useState('')
+  const [forgotOpen, setForgotOpen] = useState(false)
+  const [resetEmail, setResetEmail] = useState(defaultEmail)
+  const [resetSent, setResetSent] = useState(false)
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -23,6 +26,16 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
     }
 
     onLogin({ email: form.email, password: form.password })
+  }
+
+  function submitForgotPassword(event) {
+    event.preventDefault()
+    if (!resetEmail.trim()) {
+      setLocalError('Vui lòng nhập email để khôi phục mật khẩu.')
+      return
+    }
+    setResetSent(true)
+    setLocalError('')
   }
 
   const visibleError = localError || error
@@ -97,7 +110,7 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
                 />
                 Ghi nhớ đăng nhập
               </label>
-              <button className="font-semibold text-blue-700 hover:text-blue-800" type="button">Quên mật khẩu?</button>
+              <button className="font-semibold text-blue-700 hover:text-blue-800" onClick={() => { setForgotOpen(true); setResetSent(false); setResetEmail(form.email || defaultEmail) }} type="button">Quên mật khẩu?</button>
             </div>
 
             {visibleError ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">{visibleError}</p> : null}
@@ -107,6 +120,27 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
               {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
+
+          {forgotOpen ? (
+            <form className="mt-7 rounded-[28px] border border-blue-100 bg-white/85 p-5 shadow-[0_18px_46px_rgba(37,99,235,0.12)]" onSubmit={submitForgotPassword}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-base font-bold text-slate-950">Khôi phục mật khẩu</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">Nhập email tài khoản, hệ thống sẽ gửi liên kết đặt lại mật khẩu.</p>
+                </div>
+                <button className="motion-button flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100" onClick={() => setForgotOpen(false)} type="button">
+                  <Icon className="text-[18px]" name="close" />
+                </button>
+              </div>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <input className="auth-input h-12 flex-1" onChange={(event) => setResetEmail(event.target.value)} placeholder="email@kurifuri.vn" type="email" value={resetEmail} />
+                <button className="motion-button h-12 rounded-2xl bg-blue-700 px-5 text-sm font-bold text-white shadow-[0_14px_28px_rgba(37,99,235,0.22)] hover:bg-blue-800" type="submit">
+                  Gửi liên kết
+                </button>
+              </div>
+              {resetSent ? <p className="mt-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">Đã gửi hướng dẫn khôi phục đến {resetEmail}.</p> : null}
+            </form>
+          ) : null}
 
           <div className="mt-7 rounded-[24px] border border-blue-100 bg-blue-50/75 p-4 text-sm text-slate-700">
             <p className="font-bold text-slate-950">Tài khoản mặc định</p>

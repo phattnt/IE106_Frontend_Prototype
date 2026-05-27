@@ -75,7 +75,7 @@ function useModalLifecycle(active, onClose) {
 function ModalOverlay({ children, onClose }) {
   return createPortal(
     <div
-      className="motion-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/28 px-4 py-8 backdrop-blur-md"
+      className="motion-overlay fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/42 px-4 py-8 backdrop-blur-md"
       onClick={onClose}
       role="presentation"
     >
@@ -386,7 +386,7 @@ function StorageCard({ storageFull }) {
         </span>
       </div>
 
-      <div className="mt-7 h-3 rounded-full bg-white/55">
+      <div className="mt-7 h-3 overflow-hidden rounded-full bg-slate-300/90 ring-1 ring-slate-400/35">
         <div className={`h-full rounded-full ${storageFull ? 'bg-red-500' : 'bg-blue-700'}`} style={{ width: `${used}%` }} />
       </div>
 
@@ -413,6 +413,7 @@ function StorageCard({ storageFull }) {
 export function StudioPage({ showToast }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState(null)
+  const [historyMenuOpen, setHistoryMenuOpen] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recognized, setRecognized] = useState(false)
   const [records, setRecords] = useState(initialRecords)
@@ -520,9 +521,33 @@ export function StudioPage({ showToast }) {
             <section className="glass-panel rounded-[28px] p-6">
               <div className="mb-5 flex items-center justify-between gap-4">
                 <h2 className="text-[20px] font-semibold text-slate-950">Lịch sử quay gần đây</h2>
-                <button className="motion-button rounded-full p-2 text-slate-700 hover:bg-white/60" type="button">
-                  <Icon name="more_horiz" />
-                </button>
+                <div className="relative">
+                  <button className="motion-button rounded-full p-2 text-slate-700 hover:bg-white/60" onClick={() => setHistoryMenuOpen((current) => !current)} type="button">
+                    <Icon name="more_horiz" />
+                  </button>
+                  {historyMenuOpen ? (
+                    <div className="motion-dropdown absolute right-0 top-[calc(100%+10px)] z-[120] w-[260px] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+                      <div className="border-b border-slate-900/8 px-5 py-4">
+                        <p className="text-sm font-bold text-slate-950">Tùy chọn lịch sử</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">Quản lý nhanh các video minh chứng gần đây.</p>
+                      </div>
+                      <div className="p-2">
+                        <button className="motion-button flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50" onClick={() => { setHistoryMenuOpen(false); showToast?.({ message: 'Đang hiển thị 3 video mới nhất trong chế độ mô phỏng.', title: 'Đã làm mới lịch sử', tone: 'success' }) }} type="button">
+                          <Icon className="text-[19px] text-blue-700" name="refresh" />
+                          Làm mới lịch sử
+                        </button>
+                        <button className="motion-button flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50" onClick={() => { setHistoryMenuOpen(false); showToast?.({ message: 'Bộ lọc lỗi sẽ ưu tiên các video quay không đạt.', title: 'Đã chọn video cần kiểm tra', tone: 'warning' }) }} type="button">
+                          <Icon className="text-[19px] text-amber-600" name="rule" />
+                          Xem video cần kiểm tra
+                        </button>
+                        <button className="motion-button flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-slate-50" onClick={() => { setHistoryMenuOpen(false); showToast?.({ message: 'Xuất lịch sử quay sẽ được kết nối API ở bản production.', title: 'Xuất lịch sử quay', tone: 'success' }) }} type="button">
+                          <Icon className="text-[19px] text-slate-500" name="download" />
+                          Xuất danh sách
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               </div>
               <div className="space-y-3">
                 {records.slice(0, 3).map((record) => (

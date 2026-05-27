@@ -302,8 +302,8 @@ function CloudStorageCard({ onUpgrade }) {
             <span>Đã dùng 80/100 GB</span>
             <span>80%</span>
           </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-white/25">
-            <div className="h-full w-[80%] rounded-full bg-white" />
+          <div className="h-2.5 overflow-hidden rounded-full bg-blue-950/45 ring-1 ring-white/35">
+            <div className="h-full w-[80%] rounded-full bg-white shadow-[0_0_18px_rgba(255,255,255,0.55)]" />
           </div>
         </div>
       </div>
@@ -490,7 +490,7 @@ function ShiftDetailModal({ detail, onClose }) {
   const members = detail.staffIds.map((id) => staffProfiles[id])
 
   return createPortal(
-    <div className="motion-overlay fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/38 p-4 backdrop-blur-sm" onMouseDown={onClose}>
+    <div className="motion-overlay fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/42 p-4 backdrop-blur-sm" onMouseDown={onClose}>
       <div
         aria-modal="true"
         className="motion-modal w-full max-w-[440px] rounded-[24px] bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.24)]"

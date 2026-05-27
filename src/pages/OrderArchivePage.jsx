@@ -82,7 +82,7 @@ function useModalLifecycle(active, onClose) {
 function ModalOverlay({ children, onClose }) {
   return createPortal(
     <div
-      className="motion-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/28 px-4 py-8 backdrop-blur-md"
+      className="motion-overlay fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/42 px-4 py-8 backdrop-blur-md"
       onClick={onClose}
       role="presentation"
     >
@@ -92,7 +92,7 @@ function ModalOverlay({ children, onClose }) {
   )
 }
 
-function FilterButton({ active, children }) {
+function FilterButton({ active, children, onClick }) {
   return (
     <button
       className={`motion-button h-11 rounded-full px-5 text-sm font-bold uppercase tracking-[0.08em] ${
@@ -100,6 +100,7 @@ function FilterButton({ active, children }) {
           ? 'bg-blue-700 text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)]'
           : 'bg-white/65 text-slate-800 hover:bg-white/80'
       }`}
+      onClick={onClick}
       type="button"
     >
       {children}
@@ -377,14 +378,21 @@ export function OrderArchivePage({ showToast }) {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [deleteOrder, setDeleteOrder] = useState(null)
   const [qrOpen, setQrOpen] = useState(false)
+  const [activeFilter, setActiveFilter] = useState(channelFilters[0])
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
-  const visibleOrders = orders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+  const filteredOrders = activeFilter === 'Tất cả' ? orders : orders.filter((order) => order.platform === activeFilter)
+  const visibleOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
+  function changeFilter(filter) {
+    setActiveFilter(filter)
+    setCurrentPage(1)
+  }
 
   function openScannedOrder() {
     setQrOpen(false)
-    if (orders[0]) {
-      setSelectedOrder(orders[0])
+    if (filteredOrders[0]) {
+      setSelectedOrder(filteredOrders[0])
     }
   }
 
@@ -414,8 +422,8 @@ export function OrderArchivePage({ showToast }) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              {channelFilters.map((filter, index) => (
-                <FilterButton active={index === 0} key={filter}>
+              {channelFilters.map((filter) => (
+                <FilterButton active={activeFilter === filter} key={filter} onClick={() => changeFilter(filter)}>
                   {filter}
                 </FilterButton>
               ))}
@@ -496,8 +504,8 @@ export function OrderArchivePage({ showToast }) {
               itemLabel="đơn hàng"
               itemsPerPage={itemsPerPage}
               onPageChange={setCurrentPage}
-              totalItems={orders.length}
-              totalPages={Math.ceil(orders.length / itemsPerPage)}
+              totalItems={filteredOrders.length}
+              totalPages={Math.ceil(filteredOrders.length / itemsPerPage)}
             />
           </div>
         </section>

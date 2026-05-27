@@ -172,7 +172,7 @@ function AddProductModal({ onClose, onSave, showToast }) {
 
   return createPortal(
     <div
-      className="motion-overlay fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/24 px-4 py-8 backdrop-blur-[2px]"
+      className="motion-overlay fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/42 px-4 py-8 backdrop-blur-[2px]"
       onClick={onClose}
       role="presentation"
     >
