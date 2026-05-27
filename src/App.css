@@ -414,6 +414,39 @@
   transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
 
+.auth-input-with-action {
+  padding-right: 52px;
+}
+
+.auth-password-toggle.motion-button {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: #64748b;
+  transform: translateY(-50%);
+}
+
+.auth-password-toggle.motion-button:hover {
+  background: rgba(226, 232, 240, 0.72);
+  color: #1d4ed8;
+}
+
+.auth-password-toggle.motion-button:active {
+  transform: translateY(-50%) scale(0.98);
+}
+
+.auth-password-toggle .material-symbols-outlined {
+  display: block;
+  font-size: 20px;
+  line-height: 1;
+}
+
 .auth-input:focus {
   border-color: rgba(37, 99, 235, 0.35);
   background: #ffffff;

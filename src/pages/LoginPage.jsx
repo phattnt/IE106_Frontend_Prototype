@@ -8,6 +8,7 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
     remember: true,
   })
   const [localError, setLocalError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [forgotOpen, setForgotOpen] = useState(false)
   const [resetEmail, setResetEmail] = useState(defaultEmail)
   const [resetSent, setResetSent] = useState(false)
@@ -89,14 +90,21 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
               </label>
               <div className="relative">
                 <input
-                  className="auth-input pr-12"
+                  className="auth-input auth-input-with-action"
                   id="login-password"
                   onChange={(event) => updateField('password', event.target.value)}
                   placeholder="Nhập mật khẩu"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={form.password}
                 />
-                <Icon className="absolute right-4 top-1/2 -translate-y-1/2 text-[20px] text-slate-500" name="visibility" />
+                <button
+                  aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  className="auth-password-toggle motion-button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  type="button"
+                >
+                  <Icon className="text-[20px]" name={showPassword ? 'visibility_off' : 'visibility'} />
+                </button>
               </div>
             </div>
 
