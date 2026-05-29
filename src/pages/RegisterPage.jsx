@@ -13,6 +13,8 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
     password: '',
   })
   const [localError, setLocalError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -79,7 +81,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
               </label>
               <div className="relative">
                 <input
-                  className="auth-input pr-12"
+                  className="auth-input auth-input-with-action"
                   id="register-name"
                   onChange={(event) => updateField('name', event.target.value)}
                   placeholder="Nguyễn Minh Anh"
@@ -96,7 +98,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
               </label>
               <div className="relative">
                 <input
-                  className="auth-input pr-12"
+                  className="auth-input auth-input-with-action"
                   id="register-email"
                   onChange={(event) => updateField('email', event.target.value)}
                   placeholder="you@kurifuri.vn"
@@ -112,28 +114,48 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
                 <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="register-password">
                   Mật khẩu
                 </label>
-                <input
-                  className="auth-input"
-                  id="register-password"
-                  onChange={(event) => updateField('password', event.target.value)}
-                  placeholder="Tối thiểu 8 ký tự"
-                  type="password"
-                  value={form.password}
-                />
+                <div className="relative">
+                  <input
+                    className="auth-input auth-input-with-action"
+                    id="register-password"
+                    onChange={(event) => updateField('password', event.target.value)}
+                    placeholder="Tối thiểu 8 ký tự"
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                  />
+                  <button
+                    aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                    className="auth-password-toggle motion-button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    type="button"
+                  >
+                    <Icon className="text-[20px]" name={showPassword ? 'visibility_off' : 'visibility'} />
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="register-confirm-password">
                   Xác nhận
                 </label>
-                <input
-                  className="auth-input"
-                  id="register-confirm-password"
-                  onChange={(event) => updateField('confirmPassword', event.target.value)}
-                  placeholder="Nhập lại mật khẩu"
-                  type="password"
-                  value={form.confirmPassword}
-                />
+                <div className="relative">
+                  <input
+                    className="auth-input auth-input-with-action"
+                    id="register-confirm-password"
+                    onChange={(event) => updateField('confirmPassword', event.target.value)}
+                    placeholder="Nhập lại mật khẩu"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={form.confirmPassword}
+                  />
+                  <button
+                    aria-label={showConfirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'}
+                    className="auth-password-toggle motion-button"
+                    onClick={() => setShowConfirmPassword((current) => !current)}
+                    type="button"
+                  >
+                    <Icon className="text-[20px]" name={showConfirmPassword ? 'visibility_off' : 'visibility'} />
+                  </button>
+                </div>
               </div>
             </div>
 
