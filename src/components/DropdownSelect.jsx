@@ -138,7 +138,7 @@ export function DropdownSelect({
       {open && menuStyle
         ? createPortal(
         <div
-          className={`motion-dropdown fixed z-[120] overflow-hidden rounded-[22px] border ${menuBaseClass} ${menuClassName}`}
+          className={`motion-dropdown fixed z-[320] overflow-hidden rounded-[22px] border ${menuBaseClass} ${menuClassName}`}
           ref={menuRef}
           style={menuStyle}
         >

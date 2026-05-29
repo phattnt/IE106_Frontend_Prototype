@@ -390,6 +390,15 @@ export function ProductPage({ showToast }) {
     setCurrentPage((page) => Math.min(page, totalPages))
   }, [totalPages])
 
+  function handleDeleteProduct(product) {
+    setProductRows((current) => current.filter((item) => item.sku !== product.sku))
+    showToast?.({
+      message: `${product.name} đã được xóa khỏi danh mục sản phẩm.`,
+      title: 'Đã xóa sản phẩm',
+      tone: 'success',
+    })
+  }
+
   function handleAddProduct(payload) {
     const stockTone = payload.stock === 0 ? 'text-red-600' : payload.stock <= 12 ? 'text-orange-500' : 'text-emerald-600'
     const nextProduct = {
@@ -454,7 +463,7 @@ export function ProductPage({ showToast }) {
         <section className="rounded-[30px] p-0">
           <div className="product-grid grid gap-5" ref={productGridRef}>
             {visibleProducts.map((product) => (
-              <ProductCard key={product.sku} product={product} />
+              <ProductCard key={product.sku} onDelete={() => handleDeleteProduct(product)} product={product} />
             ))}
           </div>
 
