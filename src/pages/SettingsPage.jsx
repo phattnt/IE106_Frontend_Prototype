@@ -37,7 +37,8 @@ const planCatalog = {
 const paymentMethods = [
   { id: 'card', label: 'Thẻ tín dụng / Ghi nợ', icon: 'credit_card' },
   { id: 'bank', label: 'Chuyển khoản ngân hàng', icon: 'account_balance' },
-  { id: 'wallet', label: 'Ví điện tử (Momo / ZaloPay)', icon: 'account_balance_wallet' },
+  { id: 'momo', label: 'Ví Momo', icon: 'account_balance_wallet' },
+  { id: 'zalopay', label: 'ZaloPay', icon: 'account_balance_wallet' },
 ]
 
 const paymentHistory = [
@@ -166,9 +167,8 @@ function SettingRow({ caption, description, enabled, onChange }) {
 function PlanCard({ currentTier, planId, onSelect }) {
   const plan = planCatalog[planId]
   const isCurrent = currentTier === planId
-  const isUpgrade = currentTier === 'free' && (planId === 'pro' || planId === 'master')
-  const isHigherUpgrade = currentTier === 'pro' && planId === 'master'
-  const canAct = planId !== 'free' && planId !== 'business' && (isCurrent || isUpgrade || isHigherUpgrade)
+  const isUpgrade = planId !== 'free' && planId !== 'business' && !isCurrent
+  const canAct = planId !== 'free' && planId !== 'business'
   const isBusiness = planId === 'business'
   const buttonLabel = isCurrent ? 'Gia hạn' : 'Nâng cấp'
 
@@ -209,7 +209,7 @@ function PlanCard({ currentTier, planId, onSelect }) {
         onClick={() => (canAct ? onSelect(planId, isCurrent ? 'renew' : 'upgrade') : null)}
         type="button"
       >
-        {planId === 'business' ? 'Nâng cấp' : canAct ? buttonLabel : 'Hiện tại'}
+        {planId === 'business' ? 'Liên hệ' : buttonLabel}
       </button>
     </article>
   )
@@ -303,12 +303,6 @@ function PaymentMethodRow({ checked, icon, label, onClick }) {
       </span>
       <Icon className="text-[18px] text-slate-600" name={icon} />
       <span className="flex-1 text-sm text-slate-700">{label}</span>
-      {checked && icon === 'credit_card' ? (
-        <div className="flex gap-1">
-          <span className="h-4 w-4 rounded-sm bg-slate-400" />
-          <span className="h-4 w-4 rounded-sm bg-amber-300" />
-        </div>
-      ) : null}
     </button>
   )
 }
@@ -431,7 +425,7 @@ function ConfirmPlanModal({ action, method, onClose, onMethodChange, onNext, pla
 
 function PaymentDetailsModal({ action, method, onBack, onClose, onConfirm, planId }) {
   const plan = planCatalog[planId]
-  const methodLabel = paymentMethods.find((item) => item.id === method)?.label
+  const methodLabel = paymentMethods.find((item) => item.id === method)?.label ?? 'Thanh toán'
   const isRenew = action === 'renew'
   const actionLabel = isRenew ? 'Gia hạn' : 'Nâng cấp'
 
@@ -482,78 +476,26 @@ function PaymentDetailsModal({ action, method, onBack, onClose, onConfirm, planI
             <div className="mb-4 flex items-center justify-between gap-3">
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">Chi tiết {methodLabel}</p>
               <button className="text-xs font-semibold text-blue-700 transition hover:text-blue-800" onClick={onBack} type="button">
-                Đổi phương thức
+                Xem lại đơn hàng
               </button>
             </div>
 
-            {method === 'card' ? (
-              <div className="space-y-4">
-                <label className="block">
-                  <span className="mb-2 block text-xs font-semibold text-slate-600">Số thẻ</span>
-                  <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
-                    <Icon className="text-[18px] text-slate-400" name="credit_card" />
-                    0000 0000 0000 0000
-                  </div>
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <button className="motion-button rounded-[22px] bg-[linear-gradient(135deg,#102a7a,#2563eb_55%,#7dd3fc)] p-4 text-left text-white shadow-[0_18px_36px_rgba(37,99,235,0.24)]" type="button">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-blue-100">Visa</span>
-                    <span className="mt-5 block font-mono text-sm font-bold tracking-[0.18em]">4242 •••• •••• 4242</span>
-                    <span className="mt-3 block text-xs font-semibold text-blue-50">NGUYEN VAN A • 08/28</span>
-                  </button>
-                  <button className="motion-button rounded-[22px] bg-[linear-gradient(135deg,#111827,#334155_58%,#f59e0b)] p-4 text-left text-white shadow-[0_18px_36px_rgba(15,23,42,0.24)]" type="button">
-                    <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-amber-100">
-                      <span className="h-4 w-4 rounded-full bg-red-500/90" />
-                      <span className="-ml-3 h-4 w-4 rounded-full bg-amber-400/90" />
-                      Mastercard
-                    </span>
-                    <span className="mt-5 block font-mono text-sm font-bold tracking-[0.18em]">5555 •••• •••• 4444</span>
-                    <span className="mt-3 block text-xs font-semibold text-amber-50">TRAN MINH K • 11/29</span>
-                  </button>
+            <div className="space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold text-slate-600">Số tài khoản / mã định danh</span>
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
+                  <Icon className="text-[18px] text-slate-400" name={method === 'card' ? 'credit_card' : method === 'bank' ? 'account_balance' : 'account_balance_wallet'} />
+                  {method === 'card' ? '0000 0000 0000 0000' : method === 'bank' ? '0520 8888 9999' : '0900 000 000'}
                 </div>
-                <label className="block">
-                  <span className="mb-2 block text-xs font-semibold text-slate-600">Tên chủ thẻ</span>
-                  <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm uppercase text-slate-500">NGUYEN VAN A</div>
-                </label>
+              </label>
+              <div className="rounded-[22px] border border-dashed border-blue-200 bg-blue-50/60 p-4 text-sm leading-6 text-slate-700">
+                Hệ thống sử dụng chung biểu mẫu xác nhận cho {methodLabel}. Vui lòng kiểm tra đúng số liệu trước khi xác nhận thanh toán.
               </div>
-            ) : null}
-
-            {method === 'bank' ? (
-              <div className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Ngân hàng</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-800">ACB - Chi nhánh Quận 1</p>
-                  </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Số tài khoản</p>
-                    <p className="mt-2 text-sm font-semibold text-slate-800">0520 8888 9999</p>
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-dashed border-blue-200 bg-blue-50/60 p-4 text-sm text-slate-700">
-                  Nội dung chuyển khoản: <span className="font-bold text-blue-700">KURIFURI {plan.name.toUpperCase()} ALEX</span>
-                </div>
-              </div>
-            ) : null}
-
-            {method === 'wallet' ? (
-              <div className="grid gap-4 sm:grid-cols-[150px_1fr]">
-                <div className="flex aspect-square items-center justify-center rounded-[20px] border border-slate-200 bg-white">
-                  <div className="grid grid-cols-5 gap-1">
-                    {[...Array(25)].map((_, index) => (
-                      <span className={`h-4 w-4 ${index % 2 === 0 ? 'bg-slate-900' : 'bg-white'}`} key={index} />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex flex-col justify-center">
-                  <p className="text-sm leading-6 text-slate-600">Quét mã bằng Momo hoặc ZaloPay để tiếp tục.</p>
-                  <div className="mt-4 flex gap-2">
-                    <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-bold text-pink-600">Momo</span>
-                    <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-600">ZaloPay</span>
-                  </div>
-                </div>
-              </div>
-            ) : null}
+              <label className="block">
+                <span className="mb-2 block text-xs font-semibold text-slate-600">Tên chủ thẻ</span>
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm uppercase text-slate-500">NGUYEN VAN A</div>
+              </label>
+            </div>
           </div>
 
           <button
