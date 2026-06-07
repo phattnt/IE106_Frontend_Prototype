@@ -357,7 +357,7 @@ function DeleteProductModal({ onClose, onConfirm, product }) {
     }
   }, [onClose])
 
-  return (
+  return createPortal(
     <div
       className="motion-overlay fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/42 px-4 py-8 backdrop-blur-md"
       onClick={onClose}
@@ -408,7 +408,8 @@ function DeleteProductModal({ onClose, onConfirm, product }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
