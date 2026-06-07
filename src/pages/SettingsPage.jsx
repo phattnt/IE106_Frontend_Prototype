@@ -564,6 +564,43 @@ function PaymentSuccessModal({ onClose, planId }) {
   )
 }
 
+function ConfirmAutoDeleteModal({ onClose, onConfirm, enabled }) {
+  const title = enabled ? 'Bật tự động xóa đơn hàng' : 'Tắt tự động xóa đơn hàng'
+  const message = enabled
+    ? 'Hệ thống sẽ tự động xóa các đơn hàng đã được tạo quá 30 ngày khỏi bộ nhớ lưu trữ. Bạn có chắc chắn muốn bật tính năng này?'
+    : 'Hệ thống sẽ dừng tự động xóa các đơn hàng cũ. Bạn có chắc chắn muốn tắt tính năng này?'
+
+  return (
+    <ModalShell onClose={onClose} maxWidth="max-w-[440px]">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+        <Icon className="filled text-[22px]" name="warning" />
+      </div>
+
+      <div className="mt-5 text-center">
+        <h3 className="text-[20px] font-bold text-slate-950">{title}</h3>
+        <p className="mt-3 text-[14px] leading-6 text-slate-600">{message}</p>
+      </div>
+
+      <div className="mt-6 flex gap-4">
+        <button
+          className="motion-button h-11 flex-1 rounded-full bg-white text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+          onClick={onClose}
+          type="button"
+        >
+          Hủy bỏ
+        </button>
+        <button
+          className="motion-button h-11 flex-1 rounded-full bg-blue-700 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(37,99,235,0.22)] hover:bg-blue-800"
+          onClick={onConfirm}
+          type="button"
+        >
+          Xác nhận
+        </button>
+      </div>
+    </ModalShell>
+  )
+}
+
 function SubscriptionStatusCard({ subscription }) {
   const currentPlan = planCatalog[subscription.tier]
   const urgencyClass =
@@ -608,6 +645,7 @@ export function SettingsPage({
   const [autoFocus, setAutoFocus] = useState(true)
   const [stabilizer, setStabilizer] = useState(true)
   const [autoDelete, setAutoDelete] = useState(false)
+  const [showAutoDeleteConfirm, setShowAutoDeleteConfirm] = useState(null)
   const [checkoutState, setCheckoutState] = useState({
     open: false,
     step: 'confirm',
@@ -758,7 +796,7 @@ export function SettingsPage({
                 caption="Tự động xóa đơn hàng cũ"
                 description="xóa sau 30 ngày"
                 enabled={autoDelete}
-                onChange={handleToggleSetting('Tự động xóa đơn hàng cũ', setAutoDelete)}
+                onChange={(enabled) => setShowAutoDeleteConfirm(enabled)}
               />
             </div>
 
@@ -858,6 +896,22 @@ export function SettingsPage({
 
       {checkoutState.open && checkoutState.step === 'success' ? (
         <PaymentSuccessModal onClose={closeCheckout} planId={checkoutState.planId} />
+      ) : null}
+
+      {showAutoDeleteConfirm !== null ? (
+        <ConfirmAutoDeleteModal
+          enabled={showAutoDeleteConfirm}
+          onClose={() => setShowAutoDeleteConfirm(null)}
+          onConfirm={() => {
+            setAutoDelete(showAutoDeleteConfirm)
+            setShowAutoDeleteConfirm(null)
+            showToast?.({
+              message: `Tự động xóa đơn hàng cũ đã được ${showAutoDeleteConfirm ? 'bật' : 'tắt'}.`,
+              title: 'Đã cập nhật cài đặt',
+              tone: 'success',
+            })
+          }}
+        />
       ) : null}
     </>
   )

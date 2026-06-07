@@ -324,6 +324,34 @@ function DetailButton({ onClick }) {
   )
 }
 
+function BulkDeleteStaffConfirmModal({ count, onClose, onConfirm }) {
+  return (
+    <ModalShell ariaLabel={`Xác nhận xóa hàng loạt ${count} nhân viên`} maxWidth="max-w-[560px]" onClose={onClose}>
+      <div className="px-8 pb-8 pt-10 text-center">
+        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-rose-100">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-rose-600">
+            <Icon className="text-[34px]" name="error" />
+          </div>
+        </div>
+
+        <h2 className="mt-8 text-[22px] font-bold text-slate-950">Xóa hàng loạt nhân viên</h2>
+        <p className="mx-auto mt-4 max-w-[360px] text-[15px] leading-8 text-slate-600">
+          Bạn có chắc chắn muốn xóa <span className="font-bold text-rose-600">{count}</span> nhân viên đã chọn khỏi hệ thống không? Hành động này không thể hoàn tác.
+        </p>
+
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button className="motion-button h-12 w-32 rounded-[18px] border border-slate-300 font-semibold text-slate-600 hover:bg-slate-50" onClick={onClose} type="button">
+            Hủy bỏ
+          </button>
+          <button className="motion-button h-12 w-48 rounded-[18px] bg-red-600 font-semibold text-white shadow-[0_14px_28px_rgba(220,38,38,0.22)] hover:bg-red-700" onClick={onConfirm} type="button">
+            Xác nhận xóa
+          </button>
+        </div>
+      </div>
+    </ModalShell>
+  )
+}
+
 function DeleteEmployeeModal({ employee, onClose, onConfirm }) {
   return (
     <ModalShell ariaLabel={`Xác nhận xóa ${employee.name}`} maxWidth="max-w-[560px]" onClose={onClose}>
@@ -838,6 +866,54 @@ function CreateLeaveRequestModal({ onClose, onSubmit, showToast, staff }) {
   )
 }
 
+const getPerformancePointDate = (chartMode, index) => {
+  if (chartMode === 'previous') {
+    // May 2026 (01/05/2026 - 30/05/2026)
+    const date = new Date(2026, 4, 1) // Month index 4 is May
+    date.setDate(1 + index)
+    const dayStr = String(date.getDate()).padStart(2, '0')
+    const monthStr = String(date.getMonth() + 1).padStart(2, '0')
+    return `${dayStr}/${monthStr}/${date.getFullYear()}`
+  } else {
+    // Current up to June 7, 2026
+    const date = new Date(2026, 5, 7) // Month index 5 is June
+    date.setDate(7 - (29 - index))
+    const dayStr = String(date.getDate()).padStart(2, '0')
+    const monthStr = String(date.getMonth() + 1).padStart(2, '0')
+    return `${dayStr}/${monthStr}/${date.getFullYear()}${index === 29 ? ' (Hôm nay)' : ''}`
+  }
+}
+
+const todayLinePlugin = {
+  id: 'todayLine',
+  afterDraw: (chart) => {
+    const { chartMode } = chart.config.options.plugins.todayLine || {}
+    if (chartMode !== 'current') return
+
+    const todayIndex = 29
+    const meta = chart.getDatasetMeta(0)
+    const point = meta.data[todayIndex]
+    if (!point) return
+
+    const ctx = chart.ctx
+    ctx.save()
+    ctx.beginPath()
+    ctx.setLineDash([4, 4])
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.55)'
+    ctx.lineWidth = 1.5
+    ctx.moveTo(point.x, chart.chartArea.top)
+    ctx.lineTo(point.x, chart.chartArea.bottom)
+    ctx.stroke()
+    
+    ctx.fillStyle = '#ef4444'
+    ctx.font = 'bold 9px Inter, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('HÔM NAY', point.x, chart.chartArea.top - 6)
+    
+    ctx.restore()
+  }
+}
+
 function EmployeeDetailPage({
   canManage = true,
   embedded = false,
@@ -885,13 +961,38 @@ function EmployeeDetailPage({
         data: chartData,
         borderColor: chartTone.line,
         borderWidth: 3,
-        pointBackgroundColor: '#ffffff',
-        pointBorderColor: chartTone.line,
-        pointBorderWidth: 2,
-        pointHoverBackgroundColor: chartTone.line,
+        pointBackgroundColor: (context) => {
+          const index = context.dataIndex
+          const isToday = chartMode === 'current' && index === 29
+          return isToday ? '#ef4444' : '#ffffff'
+        },
+        pointBorderColor: (context) => {
+          const index = context.dataIndex
+          const isToday = chartMode === 'current' && index === 29
+          return isToday ? '#ffffff' : chartTone.line
+        },
+        pointBorderWidth: (context) => {
+          const index = context.dataIndex
+          const isToday = chartMode === 'current' && index === 29
+          return isToday ? 3 : 2
+        },
+        pointHoverBackgroundColor: (context) => {
+          const index = context.dataIndex
+          const isToday = chartMode === 'current' && index === 29
+          return isToday ? '#ef4444' : chartTone.line
+        },
         pointHoverBorderColor: '#ffffff',
-        pointHoverRadius: 7,
-        pointRadius: chartMode === 'previous' ? 2 : 4,
+        pointHoverRadius: (context) => {
+          const index = context.dataIndex
+          const isToday = chartMode === 'current' && index === 29
+          return isToday ? 10 : 7
+        },
+        pointRadius: (context) => {
+          const index = context.dataIndex
+          const isToday = chartMode === 'current' && index === 29
+          if (isToday) return 7
+          return chartMode === 'previous' ? 2 : 4
+        },
         fill: true,
         tension: 0.42,
         backgroundColor: (context) => {
@@ -926,6 +1027,9 @@ function EmployeeDetailPage({
       legend: {
         display: false,
       },
+      todayLine: {
+        chartMode,
+      },
       tooltip: {
         backgroundColor: '#0f172a',
         bodyColor: '#ffffff',
@@ -936,6 +1040,10 @@ function EmployeeDetailPage({
         padding: 12,
         titleColor: '#cbd5e1',
         callbacks: {
+          title: (items) => {
+            const index = items[0]?.dataIndex ?? 0
+            return getPerformancePointDate(chartMode, index)
+          },
           label: (context) => `${context.parsed.y} đơn`,
         },
       },
@@ -958,14 +1066,20 @@ function EmployeeDetailPage({
           maxRotation: 0,
           callback: function tickLabel(value, index) {
             if (chartMode === 'previous') {
-              return [0, 9, 19, 29].includes(index) ? `Ngày ${index + 1}` : ''
+              if ([0, 9, 19, 29].includes(index)) {
+                const date = new Date(2026, 4, 1 + index)
+                return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
+              }
+              return ''
             }
 
-            return index === 0 || index === Math.floor(chartData.length / 2) || index === chartData.length - 1
-              ? index === chartData.length - 1
-                ? 'Hôm nay'
-                : `Ngày ${index + 1}`
-              : ''
+            if (index === 0 || index === Math.floor(chartData.length / 2) || index === chartData.length - 1) {
+              const date = new Date(2026, 5, 7)
+              date.setDate(7 - (29 - index))
+              const dateStr = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
+              return index === chartData.length - 1 ? `${dateStr} (Hôm nay)` : dateStr
+            }
+            return ''
           },
         },
       },
@@ -1163,7 +1277,13 @@ function EmployeeDetailPage({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-[24px] font-semibold text-slate-950">Biểu đồ hiệu suất 30 ngày</h2>
-            <p className="mt-2 text-[15px] text-slate-500">Theo dõi hiệu suất hằng ngày.</p>
+            <p className="mt-2 text-[15px] text-slate-500">
+              {chartMode === 'current'
+                ? 'Hiệu suất tháng này (Tháng 06/2026)'
+                : 'Hiệu suất tháng trước (Tháng 05/2026)'}
+              <span className="mx-2 text-slate-300">•</span>
+              <span className="text-blue-700 bg-blue-50/70 px-2 py-0.5 rounded-full font-bold text-xs">Hôm nay: Chủ Nhật, 07/06/2026</span>
+            </p>
           </div>
           <div className="inline-flex rounded-2xl border border-slate-900/10 bg-slate-100/70 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
             <button
@@ -1195,7 +1315,7 @@ function EmployeeDetailPage({
 
         <div className="mt-8">
           <div className="relative h-[340px] overflow-hidden rounded-[28px] border border-white/30 bg-transparent px-2 py-2">
-            <Line data={performanceChartData} options={performanceChartOptions} />
+            <Line data={performanceChartData} options={performanceChartOptions} plugins={[todayLinePlugin]} />
           </div>
         </div>
       </section>
@@ -1360,21 +1480,67 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
   const [employeeForm, setEmployeeForm] = useState(emptyEmployeeForm)
   const [employeeFormError, setEmployeeFormError] = useState('')
 
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState('Tất cả')
+  const [selectedShiftFilter, setSelectedShiftFilter] = useState('Tất cả')
+  const [selectedLeaveStatusFilter, setSelectedLeaveStatusFilter] = useState('Tất cả')
+  const [selectedStaffIds, setSelectedStaffIds] = useState([])
+  const [selectedLeaveIds, setSelectedLeaveIds] = useState([])
+  const [bulkDeleteStaffOpen, setBulkDeleteStaffOpen] = useState(false)
+
   const staffPerPage = 10
   const leavePerPage = 2
   const selectedLeave = useMemo(() => leaveRows.find((leave) => leave.id === selectedLeaveId) ?? null, [leaveRows, selectedLeaveId])
-  const visibleLeaveRows = leaveRows.slice((leavePage - 1) * leavePerPage, leavePage * leavePerPage)
+  
+  const filteredLeaveRows = useMemo(() => {
+    if (selectedLeaveStatusFilter === 'Tất cả') {
+      return leaveRows
+    }
+    return leaveRows.filter((leave) => leave.status === selectedLeaveStatusFilter)
+  }, [leaveRows, selectedLeaveStatusFilter])
+
+  const visibleLeaveRows = filteredLeaveRows.slice((leavePage - 1) * leavePerPage, leavePage * leavePerPage)
+  
   const normalizedStaffSearch = staffSearch.trim().toLowerCase()
   const filteredStaffRows = useMemo(() => {
-    if (!normalizedStaffSearch) {
-      return staffRows
-    }
-
-    return staffRows.filter((staff) =>
-      [staff.name, staff.email, staff.code, staff.role, staff.shift].some((value) => value.toLowerCase().includes(normalizedStaffSearch))
-    )
-  }, [normalizedStaffSearch, staffRows])
+    return staffRows.filter((staff) => {
+      const matchesSearch = !normalizedStaffSearch ||
+        [staff.name, staff.email, staff.code].some((value) => value.toLowerCase().includes(normalizedStaffSearch))
+      const matchesRole = selectedRoleFilter === 'Tất cả' || staff.role === selectedRoleFilter
+      const matchesShift = selectedShiftFilter === 'Tất cả' || staff.shift === selectedShiftFilter
+      return matchesSearch && matchesRole && matchesShift
+    })
+  }, [normalizedStaffSearch, staffRows, selectedRoleFilter, selectedShiftFilter])
   const visibleStaffRows = filteredStaffRows.slice((staffPage - 1) * staffPerPage, staffPage * staffPerPage)
+
+  const handleBulkDeleteStaffConfirm = () => {
+    setStaffRows((current) => current.filter((item) => !selectedStaffIds.includes(item.id)))
+    const deletedCount = selectedStaffIds.length
+    setSelectedStaffIds([])
+    setBulkDeleteStaffOpen(false)
+    showToast?.({
+      message: `Đã xóa thành công ${deletedCount} nhân viên khỏi hệ thống.`,
+      title: 'Xóa hàng loạt thành công',
+      tone: 'success',
+    })
+  }
+
+  const handleBulkApproveLeaves = (isApproved) => {
+    const nextStatus = isApproved ? 'Đã duyệt' : 'Từ chối'
+    const nextStatusClass = isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-700'
+    setLeaveRows((prev) =>
+      prev.map((l) =>
+        selectedLeaveIds.includes(l.id)
+          ? { ...l, status: nextStatus, statusClass: nextStatusClass }
+          : l
+      )
+    )
+    setSelectedLeaveIds([])
+    showToast?.({
+      message: `Đã cập nhật trạng thái thành "${nextStatus}" cho các đơn nghỉ phép đã chọn.`,
+      title: 'Duyệt đơn hàng loạt thành công',
+      tone: 'success',
+    })
+  }
   const employeeSelf = useMemo(() => {
     const profileRole = roleOptions.includes(profile?.title) ? profile.title : 'Quản lý kho'
     const profileDepartment = departmentOptions.includes(profile?.department) ? profile.department : 'Kho vận - HCM'
@@ -1787,17 +1953,45 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
           />
         ) : (
           <>
-        <section className="flex flex-col gap-4 xl:flex-row">
+        <section className="flex flex-col gap-4 sm:flex-row">
           <label className="glass-card flex h-13 flex-1 items-center rounded-full px-5">
             <input
               className="w-full bg-transparent text-base text-slate-700 outline-none placeholder:text-slate-400"
               id="staff-search"
-              onChange={(event) => setStaffSearch(event.target.value)}
+              onChange={(event) => {
+                setStaffSearch(event.target.value)
+                setStaffPage(1)
+              }}
               placeholder="Nhập tên nhân viên, email, mã NV..."
               type="text"
               value={staffSearch}
             />
           </label>
+
+          <div className="flex gap-3">
+            <DropdownSelect
+              align="right"
+              className="w-48 shrink-0"
+              onChange={(value) => {
+                setSelectedRoleFilter(value)
+                setStaffPage(1)
+                setSelectedStaffIds([])
+              }}
+              options={[{ label: 'Tất cả chức vụ', value: 'Tất cả' }, ...roleOptions.map((role) => ({ label: role, value: role }))]}
+              value={selectedRoleFilter}
+            />
+            <DropdownSelect
+              align="right"
+              className="w-48 shrink-0"
+              onChange={(value) => {
+                setSelectedShiftFilter(value)
+                setStaffPage(1)
+                setSelectedStaffIds([])
+              }}
+              options={[{ label: 'Tất cả ca làm', value: 'Tất cả' }, ...shiftOptions.map((shift) => ({ label: shift, value: shift }))]}
+              value={selectedShiftFilter}
+            />
+          </div>
         </section>
 
         <section className="glass-card rounded-[24px] p-4 sm:p-6">
@@ -1807,12 +2001,26 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
 
               return (
                 <article
-                  className="cursor-pointer rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] transition hover:bg-white/50"
+                  className={`cursor-pointer rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] transition hover:bg-white/50 ${selectedStaffIds.includes(staff.id) ? 'bg-blue-50/24' : ''}`}
                   key={staff.id}
                   onClick={() => openEmployeeDetail(staff)}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
+                      <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          className="h-4.5 w-4.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          checked={selectedStaffIds.includes(staff.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedStaffIds((prev) => [...prev, staff.id])
+                            } else {
+                              setSelectedStaffIds((prev) => prev.filter((id) => id !== staff.id))
+                            }
+                          }}
+                        />
+                      </div>
                       <img alt={staff.name} className="h-10 w-10 rounded-full object-cover shadow-sm" src={staff.avatar} />
                       <div className="min-w-0">
                         <p className="truncate text-sm font-bold text-slate-900">{staff.name}</p>
@@ -1855,6 +2063,22 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
             <table className="w-full min-w-[920px] border-collapse">
               <thead>
                 <tr className="text-left text-[12px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                  <th className="px-4 pb-5 w-[48px] text-center">
+                    <input
+                      type="checkbox"
+                      className="h-4.5 w-4.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      checked={visibleStaffRows.length > 0 && visibleStaffRows.every((s) => selectedStaffIds.includes(s.id))}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const pageIds = visibleStaffRows.map((s) => s.id)
+                          setSelectedStaffIds((prev) => Array.from(new Set([...prev, ...pageIds])))
+                        } else {
+                          const pageIds = visibleStaffRows.map((s) => s.id)
+                          setSelectedStaffIds((prev) => prev.filter((id) => !pageIds.includes(id)))
+                        }
+                      }}
+                    />
+                  </th>
                   <th className="px-4 pb-5">Tên nhân viên</th>
                   <th className="px-4 pb-5">Thông tin</th>
                   <th className="px-4 pb-5">Trạng thái</th>
@@ -1869,10 +2093,24 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
 
                   return (
                     <tr
-                      className={`${index < visibleStaffRows.length - 1 ? 'border-b border-slate-900/12' : ''} cursor-pointer transition hover:bg-white/38`}
+                      className={`${index < visibleStaffRows.length - 1 ? 'border-b border-slate-900/12' : ''} cursor-pointer transition hover:bg-white/38 ${selectedStaffIds.includes(staff.id) ? 'bg-blue-50/24' : ''}`}
                       key={staff.id}
                       onClick={() => openEmployeeDetail(staff)}
                     >
+                      <td className="px-4 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="h-4.5 w-4.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                          checked={selectedStaffIds.includes(staff.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedStaffIds((prev) => [...prev, staff.id])
+                            } else {
+                              setSelectedStaffIds((prev) => prev.filter((id) => id !== staff.id))
+                            }
+                          }}
+                        />
+                      </td>
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-3 rounded-2xl px-2 py-1 text-left">
                           <img alt={staff.name} className="h-10 w-10 rounded-full object-cover shadow-sm" src={staff.avatar} />
@@ -1927,16 +2165,51 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
         </section>
 
         <section className="glass-card rounded-[24px] p-4 sm:p-6">
-          <div className="mb-5">
-            <h2 className="text-[24px] font-bold text-slate-950">Danh sách đơn nghỉ phép</h2>
-            <p className="mt-2 text-sm text-slate-600 sm:text-base">Xem và phê duyệt các yêu cầu nghỉ phép của nhân viên.</p>
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-[24px] font-bold text-slate-950">Danh sách đơn nghỉ phép</h2>
+              <p className="mt-2 text-sm text-slate-600 sm:text-base">Xem và phê duyệt các yêu cầu nghỉ phép của nhân viên.</p>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <span className="text-sm font-semibold text-slate-500">Trạng thái:</span>
+              <DropdownSelect
+                align="right"
+                className="w-44"
+                onChange={(value) => {
+                  setSelectedLeaveStatusFilter(value)
+                  setLeavePage(1)
+                  setSelectedLeaveIds([])
+                }}
+                options={[
+                  { label: 'Tất cả trạng thái', value: 'Tất cả' },
+                  { label: 'Chờ duyệt', value: 'Chờ duyệt' },
+                  { label: 'Đã duyệt', value: 'Đã duyệt' },
+                  { label: 'Từ chối', value: 'Từ chối' },
+                ]}
+                value={selectedLeaveStatusFilter}
+              />
+            </div>
           </div>
 
           <div className="space-y-3 md:hidden">
             {visibleLeaveRows.map((leave) => (
-              <article className="rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]" key={`${leave.id}-mobile`}>
+              <article className={`rounded-[20px] bg-white/30 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] ${selectedLeaveIds.includes(leave.id) ? 'bg-blue-50/24' : ''}`} key={`${leave.id}-mobile`}>
                 <div className="flex items-start justify-between gap-3">
-                  <ClickablePersonCell avatar={leave.avatar} name={leave.name} onClick={() => setSelectedStaffId(leave.staffId)} />
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4.5 w-4.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      checked={selectedLeaveIds.includes(leave.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedLeaveIds((prev) => [...prev, leave.id])
+                        } else {
+                          setSelectedLeaveIds((prev) => prev.filter((id) => id !== leave.id))
+                        }
+                      }}
+                    />
+                    <ClickablePersonCell avatar={leave.avatar} name={leave.name} onClick={() => setSelectedStaffId(leave.staffId)} />
+                  </div>
                   <StatusPill className={leave.statusClass}>{leave.status}</StatusPill>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
@@ -1960,6 +2233,22 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
             <table className="w-full min-w-[820px] border-collapse">
               <thead>
                 <tr className="text-left text-[12px] font-bold uppercase tracking-[0.08em] text-slate-500">
+                  <th className="px-4 pb-5 w-[48px] text-center">
+                    <input
+                      type="checkbox"
+                      className="h-4.5 w-4.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      checked={visibleLeaveRows.length > 0 && visibleLeaveRows.every((l) => selectedLeaveIds.includes(l.id))}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const pageIds = visibleLeaveRows.map((l) => l.id)
+                          setSelectedLeaveIds((prev) => Array.from(new Set([...prev, ...pageIds])))
+                        } else {
+                          const pageIds = visibleLeaveRows.map((l) => l.id)
+                          setSelectedLeaveIds((prev) => prev.filter((id) => !pageIds.includes(id)))
+                        }
+                      }}
+                    />
+                  </th>
                   <th className="px-4 pb-5">Nhân viên</th>
                   <th className="px-4 pb-5">Loại đơn</th>
                   <th className="px-4 pb-5">Thời gian</th>
@@ -1969,7 +2258,21 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
               </thead>
               <tbody>
                 {visibleLeaveRows.map((leave, index) => (
-                  <tr className={index < visibleLeaveRows.length - 1 ? 'border-b border-slate-900/12' : ''} key={leave.id}>
+                  <tr className={`${index < visibleLeaveRows.length - 1 ? 'border-b border-slate-900/12' : ''} ${selectedLeaveIds.includes(leave.id) ? 'bg-blue-50/24' : ''}`} key={leave.id}>
+                    <td className="px-4 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        className="h-4.5 w-4.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        checked={selectedLeaveIds.includes(leave.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedLeaveIds((prev) => [...prev, leave.id])
+                          } else {
+                            setSelectedLeaveIds((prev) => prev.filter((id) => id !== leave.id))
+                          }
+                        }}
+                      />
+                    </td>
                     <td className="px-4 py-4">
                       <ClickablePersonCell avatar={leave.avatar} name={leave.name} onClick={() => setSelectedStaffId(leave.staffId)} />
                     </td>
@@ -1992,8 +2295,8 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
             itemLabel="đơn nghỉ"
             itemsPerPage={leavePerPage}
             onPageChange={setLeavePage}
-            totalItems={leaveRows.length}
-            totalPages={Math.ceil(leaveRows.length / leavePerPage)}
+            totalItems={filteredLeaveRows.length}
+            totalPages={Math.ceil(filteredLeaveRows.length / leavePerPage)}
           />
         </section>
           </>
@@ -2017,6 +2320,62 @@ export function StaffPage({ onProfileChange, profile, showToast, staffTarget }) 
         />
       ) : null}
       {deleteTarget ? <DeleteEmployeeModal employee={deleteTarget} onClose={() => setDeleteTarget(null)} onConfirm={handleDeleteEmployee} /> : null}
+      {bulkDeleteStaffOpen ? <BulkDeleteStaffConfirmModal count={selectedStaffIds.length} onClose={() => setBulkDeleteStaffOpen(false)} onConfirm={handleBulkDeleteStaffConfirm} /> : null}
+
+      {selectedStaffIds.length > 0 ? createPortal(
+        <div className="fixed bottom-6 left-1/2 z-[250] flex -translate-x-1/2 items-center gap-4 rounded-full border border-slate-900/10 bg-slate-950/92 px-6 py-3.5 text-white shadow-[0_24px_50px_rgba(15,23,42,0.36)] backdrop-blur-md">
+          <span className="text-sm font-medium">
+            Đang chọn <strong className="font-bold text-blue-400">{selectedStaffIds.length}</strong> nhân viên
+          </span>
+          <div className="h-4 w-px bg-white/20" />
+          <button
+            className="motion-button text-xs font-bold text-rose-400 hover:text-rose-300"
+            onClick={() => setBulkDeleteStaffOpen(true)}
+            type="button"
+          >
+            Xóa đã chọn
+          </button>
+          <button
+            className="motion-button text-xs font-bold text-slate-400 hover:text-slate-200"
+            onClick={() => setSelectedStaffIds([])}
+            type="button"
+          >
+            Hủy chọn
+          </button>
+        </div>,
+        document.body
+      ) : null}
+
+      {selectedLeaveIds.length > 0 ? createPortal(
+        <div className="fixed bottom-6 left-1/2 z-[250] flex -translate-x-1/2 items-center gap-4 rounded-full border border-slate-900/10 bg-slate-950/92 px-6 py-3.5 text-white shadow-[0_24px_50px_rgba(15,23,42,0.36)] backdrop-blur-md">
+          <span className="text-sm font-medium">
+            Đang chọn <strong className="font-bold text-blue-400">{selectedLeaveIds.length}</strong> đơn nghỉ
+          </span>
+          <div className="h-4 w-px bg-white/20" />
+          <button
+            className="motion-button text-xs font-bold text-emerald-400 hover:text-emerald-300"
+            onClick={() => handleBulkApproveLeaves(true)}
+            type="button"
+          >
+            Duyệt đơn
+          </button>
+          <button
+            className="motion-button text-xs font-bold text-rose-400 hover:text-rose-300"
+            onClick={() => handleBulkApproveLeaves(false)}
+            type="button"
+          >
+            Từ chối
+          </button>
+          <button
+            className="motion-button text-xs font-bold text-slate-400 hover:text-slate-200"
+            onClick={() => setSelectedLeaveIds([])}
+            type="button"
+          >
+            Hủy chọn
+          </button>
+        </div>,
+        document.body
+      ) : null}
       {isAddModalOpen ? (
         <AddEmployeeModal
           form={employeeForm}

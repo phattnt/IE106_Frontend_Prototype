@@ -298,6 +298,42 @@ function DeleteOrderModal({ onClose, onConfirm, order }) {
   )
 }
 
+function BulkDeleteConfirmModal({ count, onClose, onConfirm }) {
+  useModalLifecycle(true, onClose)
+
+  return (
+    <ModalOverlay onClose={onClose}>
+      <div
+        className="motion-modal relative w-full max-w-[400px] rounded-[30px] bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)]"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Xác nhận xóa hàng loạt ${count} đơn hàng`}
+      >
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-red-600">
+          <Icon className="filled text-[20px]" name="delete" />
+        </div>
+
+        <div className="mt-5 text-center">
+          <h2 className="text-[22px] font-bold text-slate-950">Xóa hàng loạt đơn hàng</h2>
+          <p className="mt-3 text-[15px] leading-7 text-slate-600">
+            Bạn có chắc chắn muốn xóa <span className="font-bold text-rose-600">{count}</span> đơn hàng đã chọn không? Hành động này sẽ xóa vĩnh viễn và không thể khôi phục.
+          </p>
+        </div>
+
+        <div className="mt-6 flex gap-4">
+          <button className="motion-button h-12 flex-1 rounded-full bg-white text-base font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50" onClick={onClose} type="button">
+            Hủy bỏ
+          </button>
+          <button className="motion-button h-12 flex-1 rounded-full bg-red-600 text-base font-semibold text-white shadow-[0_14px_28px_rgba(220,38,38,0.22)] hover:bg-red-700" onClick={onConfirm} type="button">
+            Xác nhận xóa
+          </button>
+        </div>
+      </div>
+    </ModalOverlay>
+  )
+}
+
 function QrScannerModal({ defaultOrderCode, onClose, onScanned }) {
   const [tab, setTab] = useState('camera')
   useModalLifecycle(true, onClose)
@@ -380,13 +416,25 @@ export function OrderArchivePage({ showToast }) {
   const [qrOpen, setQrOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState(channelFilters[0])
   const [currentPage, setCurrentPage] = useState(1)
+  const [searchText, setSearchText] = useState('')
+  const [selectedOrderCodes, setSelectedOrderCodes] = useState([])
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
   const itemsPerPage = 6
-  const filteredOrders = activeFilter === 'Tất cả' ? orders : orders.filter((order) => order.platform === activeFilter)
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesPlatform = activeFilter === 'Tất cả' || order.platform === activeFilter
+    const matchesSearch =
+      order.code.toLowerCase().includes(searchText.trim().toLowerCase()) ||
+      order.customer.toLowerCase().includes(searchText.trim().toLowerCase())
+    return matchesPlatform && matchesSearch
+  })
+
   const visibleOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   function changeFilter(filter) {
     setActiveFilter(filter)
     setCurrentPage(1)
+    setSelectedOrderCodes([])
   }
 
   function openScannedOrder() {
@@ -399,10 +447,41 @@ export function OrderArchivePage({ showToast }) {
   function confirmDelete() {
     const deletedCode = deleteOrder.code
     setOrders((current) => current.filter((item) => item.code !== deleteOrder.code))
+    setSelectedOrderCodes((prev) => prev.filter((c) => c !== deletedCode))
     setDeleteOrder(null)
     showToast?.({
       message: `Đơn hàng ${deletedCode} đã được xóa khỏi lưu trữ.`,
       title: 'Xóa đơn hàng thành công',
+      tone: 'success',
+    })
+  }
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      const pageCodes = visibleOrders.map((o) => o.code)
+      setSelectedOrderCodes((prev) => Array.from(new Set([...prev, ...pageCodes])))
+    } else {
+      const pageCodes = visibleOrders.map((o) => o.code)
+      setSelectedOrderCodes((prev) => prev.filter((code) => !pageCodes.includes(code)))
+    }
+  }
+
+  const handleSelectRow = (code, checked) => {
+    if (checked) {
+      setSelectedOrderCodes((prev) => [...prev, code])
+    } else {
+      setSelectedOrderCodes((prev) => prev.filter((c) => c !== code))
+    }
+  }
+
+  const handleBulkDeleteConfirm = () => {
+    setOrders((current) => current.filter((item) => !selectedOrderCodes.includes(item.code)))
+    const deletedCount = selectedOrderCodes.length
+    setSelectedOrderCodes([])
+    setBulkDeleteOpen(false)
+    showToast?.({
+      message: `Đã xóa thành công ${deletedCount} đơn hàng đã chọn khỏi hệ thống.`,
+      title: 'Xóa hàng loạt thành công',
       tone: 'success',
     })
   }
@@ -438,8 +517,17 @@ export function OrderArchivePage({ showToast }) {
         </section>
 
         <section className="flex flex-col gap-4 xl:flex-row">
-          <label className="glass-card flex h-13 flex-1 items-center rounded-full px-5">
-            <input className="w-full bg-transparent text-base text-slate-700 outline-none placeholder:text-slate-400" placeholder="Nhập mã đơn hàng..." type="text" />
+          <label className="glass-card flex h-13 flex-1 items-center px-5 rounded-full">
+            <input
+              className="w-full bg-transparent text-base text-slate-700 outline-none placeholder:text-slate-400"
+              placeholder="Nhập mã đơn hàng hoặc tên khách hàng..."
+              type="text"
+              value={searchText}
+              onChange={(e) => {
+                setSearchText(e.target.value)
+                setCurrentPage(1)
+              }}
+            />
           </label>
 
           <button className="motion-button flex h-13 items-center justify-center gap-3 rounded-full bg-blue-700 px-7 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)] hover:bg-blue-800 xl:min-w-[156px]" onClick={() => setQrOpen(true)} type="button">
@@ -449,7 +537,15 @@ export function OrderArchivePage({ showToast }) {
         </section>
 
         <section className="glass-card overflow-hidden rounded-[30px]">
-          <div className="hidden grid-cols-[1.25fr_1.55fr_0.9fr_1.15fr_0.8fr] gap-4 px-6 pb-2 pt-4 text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500 md:grid">
+          <div className="hidden grid-cols-[0.35fr_1.25fr_1.55fr_0.9fr_1.15fr_0.8fr] gap-4 px-6 pb-2 pt-4 text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500 md:grid">
+            <span className="flex items-center justify-center">
+              <input
+                type="checkbox"
+                className="h-4.5 w-4.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                checked={visibleOrders.length > 0 && visibleOrders.every((o) => selectedOrderCodes.includes(o.code))}
+                onChange={handleSelectAll}
+              />
+            </span>
             <span>Mã đơn hàng</span>
             <span>Ngày đóng gói</span>
             <span>Nền tảng</span>
@@ -459,15 +555,23 @@ export function OrderArchivePage({ showToast }) {
 
           <div className="md:hidden">
             {visibleOrders.map((row, index) => (
-              <article className={`px-5 py-4 ${index < visibleOrders.length - 1 ? 'border-b border-slate-900/12' : ''}`} key={`${row.code}-${index}-mobile`}>
+              <article className={`px-5 py-4 ${index < visibleOrders.length - 1 ? 'border-b border-slate-900/12' : ''} ${selectedOrderCodes.includes(row.code) ? 'bg-blue-50/24' : ''}`} key={`${row.code}-${index}-mobile`}>
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-base font-bold text-slate-900">{row.code}</p>
-                    <p className="mt-1 text-sm text-slate-500">{row.packedAt}</p>
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4.5 w-4.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                      checked={selectedOrderCodes.includes(row.code)}
+                      onChange={(e) => handleSelectRow(row.code, e.target.checked)}
+                    />
+                    <div>
+                      <p className="text-base font-bold text-slate-900">{row.code}</p>
+                      <p className="mt-1 text-sm text-slate-500">{row.packedAt}</p>
+                    </div>
                   </div>
                   <PlatformBadge>{row.platform}</PlatformBadge>
                 </div>
-                <p className="mt-3 text-sm text-slate-700">{row.customer}</p>
+                <p className="mt-3 text-sm text-slate-700 pl-7.5">{row.customer}</p>
                 <div className="mt-4 flex justify-end gap-3">
                   <ActionButton icon="play_circle" onClick={() => openOrderVideo(row)} tone="primary" />
                   <ActionButton icon="delete" onClick={() => setDeleteOrder(row)} tone="danger" />
@@ -479,11 +583,19 @@ export function OrderArchivePage({ showToast }) {
           <div className="hidden md:block">
             {visibleOrders.map((row, index) => (
               <div
-                className={`grid grid-cols-[1.25fr_1.55fr_0.9fr_1.15fr_0.8fr] items-center gap-4 px-6 py-4 ${
+                className={`grid grid-cols-[0.35fr_1.25fr_1.55fr_0.9fr_1.15fr_0.8fr] items-center gap-4 px-6 py-4 ${
                   index < visibleOrders.length - 1 ? 'border-b border-slate-900/12' : ''
-                }`}
+                } ${selectedOrderCodes.includes(row.code) ? 'bg-blue-50/24' : ''}`}
                 key={`${row.code}-${index}`}
               >
+                <div className="flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    className="h-4.5 w-4.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    checked={selectedOrderCodes.includes(row.code)}
+                    onChange={(e) => handleSelectRow(row.code, e.target.checked)}
+                  />
+                </div>
                 <p className="text-sm font-semibold text-slate-900">{row.code}</p>
                 <p className="text-sm text-slate-600">{row.packedAt}</p>
                 <div>
@@ -513,7 +625,46 @@ export function OrderArchivePage({ showToast }) {
 
       {selectedOrder ? <OrderProofModal onClose={() => setSelectedOrder(null)} order={selectedOrder} /> : null}
       {deleteOrder ? <DeleteOrderModal onClose={() => setDeleteOrder(null)} onConfirm={confirmDelete} order={deleteOrder} /> : null}
+      {bulkDeleteOpen ? <BulkDeleteConfirmModal count={selectedOrderCodes.length} onClose={() => setBulkDeleteOpen(false)} onConfirm={handleBulkDeleteConfirm} /> : null}
       {qrOpen ? <QrScannerModal defaultOrderCode={orders[0]?.code ?? ''} onClose={() => setQrOpen(false)} onScanned={openScannedOrder} /> : null}
+
+      {selectedOrderCodes.length > 0 ? createPortal(
+        <div className="fixed bottom-6 left-1/2 z-[250] flex -translate-x-1/2 items-center gap-4 rounded-full border border-slate-900/10 bg-slate-950/92 px-6 py-3.5 text-white shadow-[0_24px_50px_rgba(15,23,42,0.36)] backdrop-blur-md">
+          <span className="text-sm font-medium">
+            Đang chọn <strong className="font-bold text-blue-400">{selectedOrderCodes.length}</strong> đơn hàng
+          </span>
+          <div className="h-4 w-px bg-white/20" />
+          <button
+            className="motion-button text-xs font-bold text-rose-400 hover:text-rose-300"
+            onClick={() => setBulkDeleteOpen(true)}
+            type="button"
+          >
+            Xóa đã chọn
+          </button>
+          <button
+            className="motion-button text-xs font-bold text-blue-300 hover:text-blue-200"
+            onClick={() => {
+              showToast?.({
+                message: `Đang chuẩn bị tải xuống ${selectedOrderCodes.length} video đóng gói...`,
+                title: 'Tải video hàng loạt',
+                tone: 'success',
+              })
+              setSelectedOrderCodes([])
+            }}
+            type="button"
+          >
+            Tải video
+          </button>
+          <button
+            className="motion-button text-xs font-bold text-slate-400 hover:text-slate-200"
+            onClick={() => setSelectedOrderCodes([])}
+            type="button"
+          >
+            Hủy chọn
+          </button>
+        </div>,
+        document.body
+      ) : null}
     </>
   )
 }

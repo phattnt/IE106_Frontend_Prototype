@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Icon } from './Icon.jsx'
 
 const profileMenuItems = [
@@ -7,7 +8,7 @@ const profileMenuItems = [
   { badge: 'Mới', id: 'settings', icon: 'verified', label: 'Nâng cấp gói cước', target: 'plans' },
 ]
 
-const alertNotifications = [
+const initialNotifications = [
   {
     description: 'Bộ nhớ lưu trữ đã dùng 86%, cần dọn cache hoặc nâng cấp gói.',
     icon: 'warning',
@@ -15,6 +16,7 @@ const alertNotifications = [
     time: '10 phút trước',
     title: 'Cảnh báo: Bộ nhớ sắp đầy',
     tone: 'rose',
+    unread: true,
   },
   {
     description: 'Camera chính ngắt kết nối trong 2 phút, hệ thống đã chuyển sang camera dự phòng.',
@@ -23,6 +25,7 @@ const alertNotifications = [
     time: '18 phút trước',
     title: 'Camera đóng gói mất tín hiệu',
     tone: 'amber',
+    unread: true,
   },
   {
     description: 'Đơn #99821-Z có video minh chứng thiếu 12 giây cuối.',
@@ -31,6 +34,7 @@ const alertNotifications = [
     time: '25 phút trước',
     title: 'Video minh chứng chưa hoàn chỉnh',
     tone: 'blue',
+    unread: true,
   },
   {
     description: 'Kho vận - HCM còn 8 đơn quá hạn chưa xác nhận đóng gói.',
@@ -39,6 +43,7 @@ const alertNotifications = [
     time: '42 phút trước',
     title: 'Đơn hàng quá hạn xử lý',
     tone: 'amber',
+    unread: false,
   },
   {
     description: 'Nhân viên ca chiều chưa check-in đủ theo lịch hôm nay.',
@@ -47,6 +52,7 @@ const alertNotifications = [
     time: '1 giờ trước',
     title: 'Thiếu nhân sự trong ca làm',
     tone: 'emerald',
+    unread: false,
   },
 ]
 
@@ -61,10 +67,23 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationOpen, setNotificationOpen] = useState(false)
   const [showAllNotifications, setShowAllNotifications] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [notifications, setNotifications] = useState(initialNotifications)
   const menuRef = useRef(null)
   const notificationRef = useRef(null)
   const planLabel = subscriptionTier.charAt(0).toUpperCase() + subscriptionTier.slice(1)
-  const visibleNotifications = showAllNotifications ? alertNotifications : alertNotifications.slice(0, 3)
+  const visibleNotifications = showAllNotifications ? notifications : notifications.slice(0, 3)
+  const hasUnread = notifications.some((item) => item.unread)
+
+  const handleMarkAsRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
+    )
+  }
+
+  const handleMarkAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })))
+  }
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -83,6 +102,7 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
         setMenuOpen(false)
         setNotificationOpen(false)
         setShowAllNotifications(false)
+        setShowLogoutConfirm(false)
       }
     }
 
@@ -102,6 +122,11 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
 
   function handleLogout() {
     setMenuOpen(false)
+    setShowLogoutConfirm(true)
+  }
+
+  function confirmLogout() {
+    setShowLogoutConfirm(false)
     onLogout?.()
   }
 
@@ -136,26 +161,46 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
             type="button"
           >
             <Icon name="notifications" />
-            <span className="absolute right-0.5 top-0.5 flex h-3 w-3 items-center justify-center">
-              <span className="absolute inset-0 rounded-full bg-red-500/25" />
-              <span className="h-2 w-2 rounded-full bg-red-500 shadow-sm" />
-            </span>
+            {hasUnread ? (
+              <span className="absolute right-0.5 top-0.5 flex h-3 w-3 items-center justify-center">
+                <span className="absolute inset-0 rounded-full bg-red-500/25" />
+                <span className="h-2 w-2 rounded-full bg-red-500 shadow-sm" />
+              </span>
+            ) : null}
           </button>
 
           {notificationOpen ? (
             <div className="motion-dropdown fixed left-4 right-4 top-[88px] z-[220] max-h-[calc(100vh-108px)] overflow-hidden rounded-[24px] border border-white/80 bg-white shadow-[0_28px_70px_rgba(15,23,42,0.24)] sm:left-auto sm:w-[420px] lg:right-6 lg:top-[96px]">
-              <div className="px-6 py-5">
+              <div className="flex items-center justify-between px-6 py-5">
                 <h2 className="text-[18px] font-semibold text-slate-950">Thông báo cảnh báo</h2>
+                {hasUnread ? (
+                  <button
+                    className="motion-button text-xs font-semibold text-blue-700 hover:text-blue-800"
+                    onClick={handleMarkAllAsRead}
+                    type="button"
+                  >
+                    Đọc tất cả
+                  </button>
+                ) : null}
               </div>
 
               <div className="max-h-[420px] space-y-1 overflow-y-auto px-4 pb-3">
                 {visibleNotifications.map((item) => (
-                  <article className="flex gap-4 rounded-2xl px-3 py-3 transition hover:bg-slate-50" key={item.id}>
+                  <article
+                    className="flex cursor-pointer gap-4 rounded-2xl px-3 py-3 transition hover:bg-slate-50"
+                    key={item.id}
+                    onClick={() => handleMarkAsRead(item.id)}
+                  >
                     <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${alertToneClass[item.tone]}`}>
                       <Icon className="text-[21px]" name={item.icon} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold leading-5 text-slate-950">{item.title}</p>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-semibold leading-5 text-slate-950">{item.title}</p>
+                        {item.unread ? (
+                          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500 shadow-sm" />
+                        ) : null}
+                      </div>
                       <p className="mt-1 text-xs leading-5 text-slate-700">{item.description}</p>
                       <p className="mt-1 text-xs text-slate-600">{item.time}</p>
                     </div>
@@ -234,6 +279,51 @@ export function Topbar({ onLogout, onNavigate, profile, subscriptionTier = 'free
           ) : null}
         </div>
       </div>
+
+      {showLogoutConfirm ? createPortal(
+        <div
+          className="motion-overlay fixed inset-0 z-[300] flex items-center justify-center bg-slate-950/42 px-4 py-8 backdrop-blur-md"
+          onClick={() => setShowLogoutConfirm(false)}
+          role="presentation"
+        >
+          <div
+            aria-label="Xác nhận đăng xuất"
+            aria-modal="true"
+            className="motion-modal relative w-full max-w-[400px] rounded-[30px] bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)]"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-red-600">
+              <Icon className="filled text-[20px]" name="logout" />
+            </div>
+
+            <div className="mt-5 text-center">
+              <h2 className="text-[22px] font-bold text-slate-950">Xác nhận đăng xuất</h2>
+              <p className="mt-3 text-[15px] leading-7 text-slate-600">
+                Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?
+              </p>
+            </div>
+
+            <div className="mt-6 flex gap-4">
+              <button
+                className="motion-button h-12 flex-1 rounded-full bg-white text-base font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+                onClick={() => setShowLogoutConfirm(false)}
+                type="button"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                className="motion-button h-12 flex-1 rounded-full bg-red-600 text-base font-semibold text-white shadow-[0_14px_28px_rgba(220,38,38,0.22)] hover:bg-red-700"
+                onClick={confirmLogout}
+                type="button"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      ) : null}
     </header>
   )
 }

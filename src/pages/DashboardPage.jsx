@@ -123,11 +123,11 @@ const staffProfiles = {
 }
 
 const scheduleDays = [
-  { id: 't2', label: 'T2', date: '10' },
-  { id: 't3', label: 'T3', date: '11' },
-  { id: 't4', label: 'T4', date: '12' },
-  { id: 't5', label: 'T5', date: '13' },
-  { id: 't6', label: 'T6', date: '14' },
+  { id: 't2', label: 'T2', date: '01' },
+  { id: 't3', label: 'T3', date: '02' },
+  { id: 't4', label: 'T4', date: '03' },
+  { id: 't5', label: 'T5', date: '04' },
+  { id: 't6', label: 'T6', date: '05' },
 ]
 
 const scheduleRows = [
@@ -155,6 +155,56 @@ const scheduleCells = {
 
 const formatOrderCount = (value) => `${new Intl.NumberFormat('vi-VN').format(value)} đơn`
 
+const getProgressPointDate = (range, index, label) => {
+  if (range === 'week') {
+    const dayNames = {
+      'T2': 'Thứ Hai, 01/06/2026',
+      'T3': 'Thứ Ba, 02/06/2026',
+      'T4': 'Thứ Tư, 03/06/2026',
+      'T5': 'Thứ Năm, 04/06/2026',
+      'T6': 'Thứ Sáu, 05/06/2026',
+      'T7': 'Thứ Bảy, 06/06/2026',
+      'CN': 'Chủ Nhật, 07/06/2026 (Hôm nay)'
+    }
+    return dayNames[label] || label
+  } else {
+    const date = new Date(2026, 5, 7)
+    const dayVal = parseInt(label, 10)
+    date.setDate(7 - (30 - dayVal))
+    const dayStr = String(date.getDate()).padStart(2, '0')
+    const monthStr = String(date.getMonth() + 1).padStart(2, '0')
+    return `${dayStr}/${monthStr}/${date.getFullYear()}${dayVal === 30 ? ' (Hôm nay)' : ''}`
+  }
+}
+
+const todayLinePlugin = {
+  id: 'todayLine',
+  afterDraw: (chart) => {
+    const { range } = chart.config.options.plugins.todayLine || {}
+    const todayIndex = range === 'week' ? 6 : 29
+    const meta = chart.getDatasetMeta(0)
+    const point = meta.data[todayIndex]
+    if (!point) return
+
+    const ctx = chart.ctx
+    ctx.save()
+    ctx.beginPath()
+    ctx.setLineDash([4, 4])
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.55)'
+    ctx.lineWidth = 1.5
+    ctx.moveTo(point.x, chart.chartArea.top)
+    ctx.lineTo(point.x, chart.chartArea.bottom)
+    ctx.stroke()
+    
+    ctx.fillStyle = '#ef4444'
+    ctx.font = 'bold 9px Inter, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('HÔM NAY', point.x, chart.chartArea.top - 6)
+    
+    ctx.restore()
+  }
+}
+
 function ProgressLineChart({ range }) {
   const activeRange = progressRangeOptions[range] ?? progressRangeOptions.month
   const chartData = activeRange.data
@@ -169,13 +219,37 @@ function ProgressLineChart({ range }) {
           borderColor: '#174ee9',
           borderWidth: 3,
           fill: true,
-          pointBackgroundColor: '#ffffff',
-          pointBorderColor: '#174ee9',
-          pointBorderWidth: 2,
-          pointHoverBackgroundColor: '#174ee9',
+          pointBackgroundColor: (context) => {
+            const index = context.dataIndex
+            const isToday = (range === 'week' && index === 6) || (range === 'month' && index === 29)
+            return isToday ? '#ef4444' : '#ffffff'
+          },
+          pointBorderColor: (context) => {
+            const index = context.dataIndex
+            const isToday = (range === 'week' && index === 6) || (range === 'month' && index === 29)
+            return isToday ? '#ffffff' : '#174ee9'
+          },
+          pointBorderWidth: (context) => {
+            const index = context.dataIndex
+            const isToday = (range === 'week' && index === 6) || (range === 'month' && index === 29)
+            return isToday ? 3 : 2
+          },
+          pointHoverBackgroundColor: (context) => {
+            const index = context.dataIndex
+            const isToday = (range === 'week' && index === 6) || (range === 'month' && index === 29)
+            return isToday ? '#ef4444' : '#174ee9'
+          },
           pointHoverBorderColor: '#ffffff',
-          pointHoverRadius: 7,
-          pointRadius: 4,
+          pointHoverRadius: (context) => {
+            const index = context.dataIndex
+            const isToday = (range === 'week' && index === 6) || (range === 'month' && index === 29)
+            return isToday ? 10 : 7
+          },
+          pointRadius: (context) => {
+            const index = context.dataIndex
+            const isToday = (range === 'week' && index === 6) || (range === 'month' && index === 29)
+            return isToday ? 7 : 4
+          },
           tension: 0.42,
           backgroundColor: (context) => {
             const chart = context.chart
@@ -219,6 +293,9 @@ function ProgressLineChart({ range }) {
         legend: {
           display: false,
         },
+        todayLine: {
+          range,
+        },
         tooltip: {
           backgroundColor: 'rgba(255,255,255,0.96)',
           bodyColor: '#0f172a',
@@ -241,7 +318,8 @@ function ProgressLineChart({ range }) {
           callbacks: {
             title: (items) => {
               const label = items[0]?.label ?? ''
-              return range === 'week' ? label : `Ngày ${label}`
+              const index = items[0]?.dataIndex ?? 0
+              return getProgressPointDate(range, index, label)
             },
             label: (context) => formatOrderCount(context.parsed.y),
           },
@@ -262,7 +340,13 @@ function ProgressLineChart({ range }) {
               if (range === 'week') {
                 return day
               }
-              return ['01', '05', '10', '15', '20', '25', '30'].includes(day) ? `Ngày ${day}` : ''
+              if (['01', '05', '10', '15', '20', '25', '30'].includes(day)) {
+                const date = new Date(2026, 5, 7)
+                const dayVal = parseInt(day, 10)
+                date.setDate(7 - (30 - dayVal))
+                return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
+              }
+              return ''
             },
             font: {
               size: 12,
@@ -274,7 +358,21 @@ function ProgressLineChart({ range }) {
           },
         },
         y: {
-          display: false,
+          border: {
+            display: false,
+          },
+          grid: {
+            color: 'rgba(15, 23, 42, 0.08)',
+            drawTicks: false,
+          },
+          ticks: {
+            color: '#64748b',
+            font: {
+              size: 12,
+              weight: 600,
+            },
+            padding: 12,
+          },
           suggestedMax: Math.max(...chartData.map((item) => item.value)) + (range === 'week' ? 120 : 360),
           suggestedMin: Math.max(0, Math.min(...chartData.map((item) => item.value)) - (range === 'week' ? 120 : 360)),
         },
@@ -284,7 +382,7 @@ function ProgressLineChart({ range }) {
 
   return (
     <div className="relative h-[250px] w-full">
-      <Line data={progressChartData} options={progressChartOptions} />
+      <Line data={progressChartData} options={progressChartOptions} plugins={[todayLinePlugin]} />
     </div>
   )
 }
@@ -387,8 +485,15 @@ function ScheduleTable({ onOpenDetail }) {
 
   return (
     <section className="glass-panel rounded-[28px] p-6 lg:p-7">
-      <div className="mb-7 flex items-center justify-between gap-4">
-        <h2 className="text-[24px] font-semibold leading-tight text-slate-950">Lịch ca làm việc</h2>
+      <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col">
+          <h2 className="text-[24px] font-semibold leading-tight text-slate-950">Lịch ca làm việc</h2>
+          <p className="mt-1 text-xs font-semibold text-slate-500">
+            Tuần: 01/06/2026 - 05/06/2026
+            <span className="mx-2 text-slate-300">•</span>
+            <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">Tháng 06/2026</span>
+          </p>
+        </div>
 
         <div className="flex items-center gap-3">
           <button
@@ -402,13 +507,6 @@ function ScheduleTable({ onOpenDetail }) {
             type="button"
           >
             <Icon name="chevron_right" className="text-[20px]" />
-          </button>
-          <button
-            className="motion-button rounded-full px-2 text-sm font-semibold text-blue-700 hover:text-blue-600"
-            onClick={() => onOpenDetail(selectedShift)}
-            type="button"
-          >
-            Chi tiết
           </button>
         </div>
       </div>
@@ -550,11 +648,18 @@ export function DashboardPage({ onNavigate }) {
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(280px,0.36fr)]">
         <article className="glass-panel rounded-[30px] p-6 lg:p-7">
           <div className="mb-3 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-100 text-blue-700">
-                <Icon name="inventory_2" className="text-[18px]" />
-              </span>
-              <h1 className="text-[22px] font-semibold text-slate-950">Tiến độ đóng gói</h1>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-3">
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-100 text-blue-700">
+                  <Icon name="inventory_2" className="text-[18px]" />
+                </span>
+                <h1 className="text-[22px] font-semibold text-slate-950">Tiến độ đóng gói</h1>
+              </div>
+              <p className="mt-1.5 text-xs font-semibold text-slate-500">
+                {progressRange === 'week' ? 'Tuần này: 01/06/2026 - 07/06/2026' : '30 ngày qua: 09/05/2026 - 07/06/2026'}
+                <span className="mx-2 text-slate-300">•</span>
+                <span className="text-blue-700 bg-blue-50/70 px-2 py-0.5 rounded-full font-bold">Hôm nay: Chủ Nhật, 07/06/2026</span>
+              </p>
             </div>
             <div className="relative">
               <button

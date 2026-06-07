@@ -341,6 +341,77 @@ function AddProductModal({ onClose, onSave, showToast }) {
   )
 }
 
+function DeleteProductModal({ onClose, onConfirm, product }) {
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onClose])
+
+  return (
+    <div
+      className="motion-overlay fixed inset-0 z-[260] flex items-center justify-center bg-slate-950/42 px-4 py-8 backdrop-blur-md"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        aria-label={`Xác nhận xóa sản phẩm ${product.name}`}
+        aria-modal="true"
+        className="motion-modal relative w-full max-w-[400px] rounded-[30px] bg-white p-6 shadow-[0_28px_80px_rgba(15,23,42,0.22)]"
+        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+      >
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-red-600">
+          <Icon className="filled text-[20px]" name="delete" />
+        </div>
+
+        <div className="mt-5 text-center">
+          <h2 className="text-[22px] font-bold text-slate-950">Xác nhận xóa sản phẩm</h2>
+          <p className="mt-3 text-[15px] leading-7 text-slate-600">
+            Bạn có chắc chắn muốn xóa sản phẩm <span className="font-semibold text-slate-950">{product.name}</span> không? Hành động này không thể hoàn tác.
+          </p>
+        </div>
+
+        <div className="mt-6 rounded-[22px] border border-slate-100 bg-white p-4">
+          <div className="flex items-center gap-3">
+            <img alt={product.name} className="h-16 w-16 rounded-xl object-cover" src={product.imageUrl} />
+            <div className="min-w-0 flex-1 text-left">
+              <p className="truncate text-sm font-bold text-slate-950">{product.name}</p>
+              <p className="mt-1 text-xs text-slate-500">Mã SKU: {product.sku}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-4">
+          <button
+            className="motion-button h-12 flex-1 rounded-full bg-white text-base font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"
+            onClick={onClose}
+            type="button"
+          >
+            Hủy bỏ
+          </button>
+          <button
+            className="motion-button h-12 flex-1 rounded-full bg-red-600 text-base font-semibold text-white shadow-[0_14px_28px_rgba(220,38,38,0.22)] hover:bg-red-700"
+            onClick={() => onConfirm(product)}
+            type="button"
+          >
+            Xóa sản phẩm
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function buildSkuFromName(name, index) {
   const letters = name
     .normalize('NFD')
@@ -358,6 +429,7 @@ export function ProductPage({ showToast }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [productToDelete, setProductToDelete] = useState(null)
   const [productRows, setProductRows] = useState(initialProducts)
   const [itemsPerPage, setItemsPerPage] = useState(8)
   const filteredProducts =
@@ -396,6 +468,7 @@ export function ProductPage({ showToast }) {
 
   function handleDeleteProduct(product) {
     setProductRows((current) => current.filter((item) => item.sku !== product.sku))
+    setProductToDelete(null)
     showToast?.({
       message: `${product.name} đã được xóa khỏi danh mục sản phẩm.`,
       title: 'Đã xóa sản phẩm',
@@ -467,7 +540,7 @@ export function ProductPage({ showToast }) {
         <section className="rounded-[30px] p-0">
           <div className="product-grid grid gap-5" ref={productGridRef}>
             {visibleProducts.map((product) => (
-              <ProductCard key={product.sku} onDelete={() => handleDeleteProduct(product)} product={product} />
+              <ProductCard key={product.sku} onDelete={() => setProductToDelete(product)} product={product} />
             ))}
           </div>
 
@@ -483,6 +556,14 @@ export function ProductPage({ showToast }) {
       </div>
 
       {showAddModal ? <AddProductModal onClose={() => setShowAddModal(false)} onSave={handleAddProduct} showToast={showToast} /> : null}
+
+      {productToDelete ? (
+        <DeleteProductModal
+          onClose={() => setProductToDelete(null)}
+          onConfirm={handleDeleteProduct}
+          product={productToDelete}
+        />
+      ) : null}
     </>
   )
 }
