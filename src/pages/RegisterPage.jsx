@@ -119,7 +119,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
                     className="auth-input auth-input-with-action"
                     id="register-password"
                     onChange={(event) => updateField('password', event.target.value)}
-                    placeholder="Tối thiểu 8 ký tự"
+                    placeholder="Nhập mật khẩu"
                     type={showPassword ? 'text' : 'password'}
                     value={form.password}
                   />
@@ -132,6 +132,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
                     <Icon className="text-[20px]" name={showPassword ? 'visibility_off' : 'visibility'} />
                   </button>
                 </div>
+                <p className="mt-2 text-[11px] font-semibold text-slate-400">Yêu cầu: Tối thiểu 8 ký tự</p>
               </div>
 
               <div>
