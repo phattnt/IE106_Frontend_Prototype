@@ -69,7 +69,7 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
           <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="login-email">
-                Email
+                Email <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -77,6 +77,7 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
                   id="login-email"
                   onChange={(event) => updateField('email', event.target.value)}
                   placeholder="admin@kurifuri.vn"
+                  required
                   type="email"
                   value={form.email}
                 />
@@ -86,7 +87,7 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
 
             <div>
               <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="login-password">
-                Mật khẩu
+                Mật khẩu <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -94,6 +95,7 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
                   id="login-password"
                   onChange={(event) => updateField('password', event.target.value)}
                   placeholder="Nhập mật khẩu"
+                  required
                   type={showPassword ? 'text' : 'password'}
                   value={form.password}
                 />
@@ -141,7 +143,7 @@ export function LoginPage({ defaultEmail, defaultPassword, error, isSubmitting, 
                 </button>
               </div>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                <input className="auth-input h-12 flex-1" onChange={(event) => setResetEmail(event.target.value)} placeholder="email@kurifuri.vn" type="email" value={resetEmail} />
+                <input required className="auth-input h-12 flex-1" onChange={(event) => setResetEmail(event.target.value)} placeholder="email@kurifuri.vn" type="email" value={resetEmail} />
                 <button className="motion-button h-12 rounded-2xl bg-blue-700 px-5 text-sm font-bold text-white shadow-[0_14px_28px_rgba(37,99,235,0.22)] hover:bg-blue-800" type="submit">
                   Gửi liên kết
                 </button>

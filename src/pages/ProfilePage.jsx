@@ -86,12 +86,13 @@ export function ProfilePage({ profile, onProfileChange, showToast }) {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="profile-name">
-              Họ và tên
+              Họ và tên <span className="text-rose-500">*</span>
             </label>
             <input
               className="h-12 w-full rounded-2xl border border-white/70 bg-white/65 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)] outline-none transition focus:border-slate-900/70 focus:bg-white focus:ring-2 focus:ring-slate-900/8"
               id="profile-name"
               onChange={(event) => updateField('name', event.target.value)}
+              required
               type="text"
               value={draft.name}
             />
@@ -125,12 +126,13 @@ export function ProfilePage({ profile, onProfileChange, showToast }) {
 
           <div>
             <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="profile-email">
-              Email
+              Email <span className="text-rose-500">*</span>
             </label>
             <input
               className="h-12 w-full rounded-2xl border border-white/70 bg-white/65 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)] outline-none transition focus:border-slate-900/70 focus:bg-white focus:ring-2 focus:ring-slate-900/8"
               id="profile-email"
               onChange={(event) => updateField('email', event.target.value)}
+              required
               type="email"
               value={draft.email}
             />
@@ -138,12 +140,13 @@ export function ProfilePage({ profile, onProfileChange, showToast }) {
 
           <div>
             <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="profile-phone">
-              Số điện thoại
+              Số điện thoại <span className="text-rose-500">*</span>
             </label>
             <input
               className="h-12 w-full rounded-2xl border border-white/70 bg-white/65 px-4 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(42,76,130,0.08)] outline-none transition focus:border-slate-900/70 focus:bg-white focus:ring-2 focus:ring-slate-900/8"
               id="profile-phone"
               onChange={(event) => updateField('phone', event.target.value)}
+              required
               type="text"
               value={draft.phone}
             />

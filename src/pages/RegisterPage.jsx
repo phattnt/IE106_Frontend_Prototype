@@ -77,7 +77,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
           <form className="mt-7 space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="register-name">
-                Họ và tên
+                Họ và tên <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -85,6 +85,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
                   id="register-name"
                   onChange={(event) => updateField('name', event.target.value)}
                   placeholder="Nguyễn Minh Anh"
+                  required
                   type="text"
                   value={form.name}
                 />
@@ -94,7 +95,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
 
             <div>
               <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="register-email">
-                Email
+                Email <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -102,6 +103,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
                   id="register-email"
                   onChange={(event) => updateField('email', event.target.value)}
                   placeholder="you@kurifuri.vn"
+                  required
                   type="email"
                   value={form.email}
                 />
@@ -112,7 +114,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="register-password">
-                  Mật khẩu
+                  Mật khẩu <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -120,6 +122,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
                     id="register-password"
                     onChange={(event) => updateField('password', event.target.value)}
                     placeholder="Nhập mật khẩu"
+                    required
                     type={showPassword ? 'text' : 'password'}
                     value={form.password}
                   />
@@ -137,7 +140,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
 
               <div>
                 <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500" htmlFor="register-confirm-password">
-                  Xác nhận
+                  Xác nhận <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -145,6 +148,7 @@ export function RegisterPage({ error, isSubmitting, onRegister, onSwitch }) {
                     id="register-confirm-password"
                     onChange={(event) => updateField('confirmPassword', event.target.value)}
                     placeholder="Nhập lại mật khẩu"
+                    required
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={form.confirmPassword}
                   />

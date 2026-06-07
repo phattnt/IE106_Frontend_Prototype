@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -415,13 +415,14 @@ function AddEmployeeModal({
 
           <div>
             <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-name">
-              Họ và tên
+              Họ và tên <span className="text-rose-500">*</span>
             </label>
             <input
               className="h-12 w-full rounded-full border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
               id="staff-name"
               onChange={(event) => onValueChange('name', event.target.value)}
               placeholder="Nhập tên đầy đủ của nhân viên"
+              required
               type="text"
               value={form.name}
             />
@@ -430,13 +431,14 @@ function AddEmployeeModal({
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
               <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-email">
-                Email
+                Email <span className="text-rose-500">*</span>
               </label>
               <input
                 className="h-12 w-full rounded-full border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
                 id="staff-email"
                 onChange={(event) => onValueChange('email', event.target.value)}
                 placeholder="example@vp.com"
+                required
                 type="email"
                 value={form.email}
               />
@@ -444,13 +446,14 @@ function AddEmployeeModal({
 
             <div>
               <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-phone">
-                Số điện thoại
+                Số điện thoại <span className="text-rose-500">*</span>
               </label>
               <input
                 className="h-12 w-full rounded-full border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
                 id="staff-phone"
                 onChange={(event) => onValueChange('phone', event.target.value)}
                 placeholder="09xx xxx xxx"
+                required
                 type="text"
                 value={form.phone}
               />
@@ -458,13 +461,14 @@ function AddEmployeeModal({
 
             <div>
               <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-id-card">
-                Số CMND/CCCD
+                Số CMND/CCCD <span className="text-rose-500">*</span>
               </label>
               <input
                 className="h-12 w-full rounded-full border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
                 id="staff-id-card"
                 onChange={(event) => onValueChange('identityNumber', event.target.value)}
                 placeholder="Nhập số định danh"
+                required
                 type="text"
                 value={form.identityNumber}
               />
@@ -509,7 +513,7 @@ function AddEmployeeModal({
 
           <div>
             <label className="mb-3 block text-[15px] font-medium text-slate-800" htmlFor="staff-shift">
-              Ca làm
+              Ca làm <span className="text-rose-500">*</span>
             </label>
             <DropdownSelect
               onChange={(value) => onValueChange('shift', value)}
@@ -763,22 +767,24 @@ function CreateLeaveRequestModal({ onClose, onSubmit, showToast, staff }) {
           </div>
 
           <label className="block">
-            <span className="mb-3 block text-[15px] font-medium text-slate-800">Thời gian nghỉ</span>
+            <span className="mb-3 block text-[15px] font-medium text-slate-800">Thời gian nghỉ <span className="text-rose-500">*</span></span>
             <input
               className="h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 text-[15px] text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
               onChange={(event) => setTime(event.target.value)}
               placeholder="Ví dụ: 1 ngày (22/10)"
+              required
               type="text"
               value={time}
             />
           </label>
 
           <label className="block">
-            <span className="mb-3 block text-[15px] font-medium text-slate-800">Lý do chi tiết</span>
+            <span className="mb-3 block text-[15px] font-medium text-slate-800">Lý do chi tiết <span className="text-rose-500">*</span></span>
             <textarea
               className="min-h-28 w-full rounded-[20px] border border-slate-300 bg-white p-4 text-[15px] leading-7 text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15"
               onChange={(event) => setReason(event.target.value)}
               placeholder="Nhập lý do nghỉ phép"
+              required
               value={reason}
             />
           </label>
@@ -1060,6 +1066,7 @@ function EmployeeDetailPage({
               <input
                 className="w-full bg-transparent text-[36px] font-semibold leading-none tracking-[-0.03em] text-slate-950 outline-none sm:text-[42px]"
                 onChange={(event) => updateDraft('name', event.target.value)}
+                required
                 type="text"
                 value={draft.name}
               />
@@ -1087,19 +1094,21 @@ function EmployeeDetailPage({
 
         <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           <div>
-            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Email liên hệ</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Email liên hệ <span className="text-rose-500">*</span></p>
             <input
               className={detailInputClass}
               onChange={(event) => updateDraft('email', event.target.value)}
+              required
               type="email"
               value={draft.email}
             />
           </div>
           <div>
-            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Số điện thoại</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Số điện thoại <span className="text-rose-500">*</span></p>
             <input
               className={detailInputClass}
               onChange={(event) => updateDraft('phone', event.target.value)}
+              required
               type="text"
               value={draft.phone}
             />
@@ -1126,12 +1135,13 @@ function EmployeeDetailPage({
             />
           </div>
           <div>
-            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ngày gia nhập</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500">Ngày gia nhập <span className="text-rose-500">*</span></p>
             <div className={detailStaticFieldClass}>
               <Icon className="shrink-0 text-[18px] text-slate-400" name="calendar_today" />
               <input
                 className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-700 outline-none"
                 onChange={(event) => updateDraft('joinedAt', event.target.value)}
+                required
                 type="text"
                 value={draft.joinedAt}
               />

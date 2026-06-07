@@ -199,7 +199,7 @@ function AddProductModal({ onClose, onSave, showToast }) {
 
         <div className="grid grid-cols-1 gap-8 px-8 py-8 lg:grid-cols-[260px_1fr]">
           <section>
-            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600">Hình ảnh sản phẩm</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600">Hình ảnh sản phẩm <span className="text-rose-500">*</span></p>
             <label className="motion-button mt-5 flex aspect-square w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[18px] border-2 border-dashed border-slate-300 bg-slate-100/70 text-center hover:border-slate-400 hover:bg-slate-100">
               {imagePreview ? (
                 <img alt="Preview sản phẩm" className="h-full w-full object-cover" src={imagePreview} />
@@ -229,13 +229,14 @@ function AddProductModal({ onClose, onSave, showToast }) {
           <section className="space-y-5">
             <div>
               <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600" htmlFor="product-name">
-                Tên sản phẩm
+                Tên sản phẩm <span className="text-rose-500">*</span>
               </label>
               <input
                 className="h-12 w-full rounded-[18px] border border-transparent bg-slate-100 px-5 text-[15px] font-medium text-slate-800 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-2 focus:ring-slate-300/40"
                 id="product-name"
                 onChange={(event) => setProductName(event.target.value)}
                 placeholder="Ví dụ: Camera Sony Alpha A7 IV"
+                required
                 type="text"
                 value={productName}
               />
@@ -243,7 +244,7 @@ function AddProductModal({ onClose, onSave, showToast }) {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600">Danh mục</p>
+                <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600">Danh mục <span className="text-rose-500">*</span></p>
                 <DropdownSelect
                   className="w-full max-w-[264px]"
                   onChange={setCategory}
@@ -257,12 +258,13 @@ function AddProductModal({ onClose, onSave, showToast }) {
 
               <div>
                 <label className="mb-3 block text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600" htmlFor="product-stock">
-                  Số lượng trong kho
+                  Số lượng trong kho <span className="text-rose-500">*</span>
                 </label>
                 <input
                   className="h-11 w-full rounded-2xl border border-transparent bg-slate-100 px-5 text-[15px] font-medium text-slate-800 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-2 focus:ring-slate-300/40"
                   id="product-stock"
                   onChange={(event) => setStock(event.target.value)}
+                  required
                   type="number"
                   value={stock}
                 />
@@ -270,7 +272,7 @@ function AddProductModal({ onClose, onSave, showToast }) {
             </div>
 
             <div>
-              <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600">Biến thể sản phẩm</p>
+              <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.08em] text-slate-600">Biến thể sản phẩm <span className="text-rose-500">*</span></p>
               <div className="space-y-3">
                 {variants.map((variant) => (
                   <article className="grid grid-cols-[1fr_160px_32px] items-center gap-3 rounded-[18px] bg-slate-100 px-4 py-3" key={variant.id}>
@@ -280,6 +282,7 @@ function AddProductModal({ onClose, onSave, showToast }) {
                         className="mt-1 w-full bg-transparent text-sm font-bold text-slate-900 outline-none"
                         onChange={(event) => updateVariant(variant.id, 'name', event.target.value)}
                         placeholder="Ví dụ: L / Đen Nhám"
+                        required
                         type="text"
                         value={variant.name}
                       />
@@ -290,6 +293,7 @@ function AddProductModal({ onClose, onSave, showToast }) {
                         className="mt-1 w-full bg-transparent text-sm font-bold text-slate-900 outline-none"
                         onChange={(event) => updateVariant(variant.id, 'price', event.target.value)}
                         placeholder="Ví dụ: 1200000"
+                        required
                         type="text"
                         value={variant.price}
                       />
